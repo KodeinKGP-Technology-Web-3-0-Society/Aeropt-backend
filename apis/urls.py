@@ -28,7 +28,7 @@ urlpatterns = [
     # path('users/', include('users.urls')),
 
     # chatbot app — study sessions + LLM messaging
-    # path('chat/', include('chatbot.urls')),
+    path('chat/', include('chatbot.urls')),
 
     # analytics app — dashboard, progress, concept scores
     # path('analytics/', include('analytics.urls')),

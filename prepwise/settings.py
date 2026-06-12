@@ -10,10 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
@@ -39,10 +43,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Third-party — install these: pip install djangorestframework djangorestframework-simplejwt
-    # django-cors-headers django-filter drf-spectacular celery redis anthropic python-dotenv psycopg2-binary
-    # 'rest_framework',
+    # django-cors-headers django-filter drf-spectacular celery redis openai python-dotenv psycopg2-binary
+    'rest_framework',
     # 'rest_framework_simplejwt',
-    # 'corsheaders',
+    'corsheaders',
     # 'django_filters',
     # 'drf_spectacular',
 
@@ -58,6 +62,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -132,3 +137,17 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+CHATBOT_MODEL = os.getenv("CHATBOT_MODEL", "gpt-4.1-mini")
+CHATBOT_MAX_TOKENS = int(os.getenv("CHATBOT_MAX_TOKENS", "1000"))
+CHATBOT_AUTH_DISABLED = os.getenv("CHATBOT_AUTH_DISABLED", "false").strip().lower() in ("1", "true", "yes", "on")
+CHATBOT_DEV_USERNAME = os.getenv("CHATBOT_DEV_USERNAME", "chatbot-dev")
+CHATBOT_DEV_EMAIL = os.getenv("CHATBOT_DEV_EMAIL", "chatbot-dev@local.test")
+
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+    if origin.strip()
+]
+CORS_ALLOW_CREDENTIALS = True
