@@ -138,8 +138,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-CHATBOT_MODEL = os.getenv("CHATBOT_MODEL", "gpt-4.1-mini")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_API_BASE = os.getenv("GROQ_API_BASE", "https://api.groq.com/openai/v1")
+CHATBOT_MODEL = os.getenv("CHATBOT_MODEL", "llama-3.3-70b-versatile")
 CHATBOT_MAX_TOKENS = int(os.getenv("CHATBOT_MAX_TOKENS", "1000"))
 CHATBOT_AUTH_DISABLED = os.getenv("CHATBOT_AUTH_DISABLED", "false").strip().lower() in ("1", "true", "yes", "on")
 CHATBOT_DEV_USERNAME = os.getenv("CHATBOT_DEV_USERNAME", "chatbot-dev")

@@ -31,7 +31,7 @@ urlpatterns = [
     path('chat/', include('chatbot.urls')),
 
     # analytics app — dashboard, progress, concept scores
-    # path('analytics/', include('analytics.urls')),
+    path('analytics/', include('analytics.urls')),
 
     # OpenAPI schema + Swagger UI (drf-spectacular)
     # path('schema/', SpectacularAPIView.as_view(), name='schema'),
