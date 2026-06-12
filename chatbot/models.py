@@ -115,6 +115,87 @@ NOTES ON LLM INTEGRATION
 - Rate limit   : 50 messages / hour per user (configurable via DRF throttle)
 """
 
-from django.db import models
+import uuid
 
-# Models will be implemented here — see docstring above for schema.
+from django.conf import settings
+from django.db import models
+from django.db.models import Q
+from django.utils import timezone
+
+
+class ChatSession(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="chat_sessions")
+    title = models.CharField(max_length=200, default="New Session")
+    subject = models.CharField(max_length=50, default="Physics")
+    active_chapters = models.JSONField(default=list, blank=True)
+    started_at = models.DateTimeField(auto_now_add=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    system_prompt_used = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ("-started_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("user",),
+                condition=Q(is_active=True),
+                name="unique_active_chat_session_per_user",
+            )
+        ]
+
+    def end(self):
+        if self.is_active:
+            self.is_active = False
+            self.ended_at = timezone.now()
+            self.save(update_fields=("is_active", "ended_at"))
+
+    def __str__(self):
+        return f"{self.user_id}:{self.title}"
+
+
+class ChatMessage(models.Model):
+    ROLE_USER = "user"
+    ROLE_ASSISTANT = "assistant"
+    ROLE_CHOICES = (
+        (ROLE_USER, "User"),
+        (ROLE_ASSISTANT, "Assistant"),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name="messages")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    content = models.TextField()
+    structured_response = models.JSONField(null=True, blank=True)
+    tokens_used = models.PositiveIntegerField(default=0)
+    latency_ms = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("created_at",)
+
+    def __str__(self):
+        return f"{self.session_id}:{self.role}:{self.created_at.isoformat()}"
+
+
+class ConceptSnapshot(models.Model):
+    TREND_UP = "up"
+    TREND_DOWN = "down"
+    TREND_FLAT = "flat"
+    TREND_CHOICES = (
+        (TREND_UP, "Up"),
+        (TREND_DOWN, "Down"),
+        (TREND_FLAT, "Flat"),
+    )
+
+    message = models.ForeignKey(ChatMessage, on_delete=models.CASCADE, related_name="concept_snapshots")
+    concept_name = models.CharField(max_length=200)
+    score_at_time = models.PositiveSmallIntegerField(default=0)
+    trend = models.CharField(max_length=10, choices=TREND_CHOICES, default=TREND_FLAT)
+    is_prerequisite = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ("id",)
+
+    def __str__(self):
+        return f"{self.message_id}:{self.concept_name}"

@@ -23,5 +23,5 @@ urlpatterns = [
     # All /api/v1/ routes flow through apis/urls.py (the central router).
     # apis/urls.py then delegates to each app's urls.py.
     # Uncomment once apis/views.py has HealthCheckView implemented:
-    # path('api/v1/', include('apis.urls')),
+    path('api/v1/', include('apis.urls')),
 ]
