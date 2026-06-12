@@ -162,3 +162,91 @@ SIGNAL HANDLER (analytics/signals.py — not a view)
 from django.db import models
 
 # Models will be implemented here — see docstring above for schema.
+from django.conf import settings
+
+class ConceptProficiency(models.Model):
+    TREND_UP = "up"
+    TREND_DOWN = "down"
+    TREND_FLAT = "flat"
+    TREND_CHOICES = (
+        (TREND_UP, "Up"),
+        (TREND_DOWN, "Down"),
+        (TREND_FLAT, "Flat"),
+    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="concept_proficiencies")
+    concept_name = models.CharField(max_length=200)
+    chapter = models.CharField(max_length=200)
+    score = models.PositiveSmallIntegerField(default=0) # 0 to 100
+    attempts = models.PositiveIntegerField(default=0)
+    correct_attempts = models.PositiveIntegerField(default=0)
+    last_attempted = models.DateTimeField(auto_now=True)
+    trend = models.CharField(max_length=10, choices=TREND_CHOICES, default=TREND_FLAT)
+
+    class Meta:
+        ordering = ("concept_name",)
+        unique_together = (("user", "concept_name"),)
+
+    def __str__(self):
+        return f"{self.user_id}:{self.concept_name}:{self.score}%"
+
+
+class StudyStreak(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="study_streak")
+    current_streak = models.PositiveIntegerField(default=0)
+    longest_streak = models.PositiveIntegerField(default=0)
+    last_study_date = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user_id}: current={self.current_streak}, longest={self.longest_streak}"
+
+
+class DailyProficiencySnapshot(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="daily_proficiency_snapshots")
+    chapter = models.CharField(max_length=200)
+    date = models.DateField()
+    avg_score = models.FloatField(default=0.0)
+
+    class Meta:
+        ordering = ("-date",)
+        unique_together = (("user", "chapter", "date"),)
+
+
+class PracticeAttempt(models.Model):
+    QUESTION_TYPES = (
+        ("SCQ", "Single Choice Question"),
+        ("MCQ", "Multiple Choice Question"),
+        ("Numerical", "Numerical"),
+        ("PYQ", "Previous Year Question"),
+    )
+    MISTAKE_TYPES = (
+        ("Conceptual", "Conceptual"),
+        ("Procedural", "Procedural"),
+        ("Calculation", "Calculation"),
+        ("Misinterpretation", "Misinterpretation"),
+    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="practice_attempts")
+    concept_name = models.CharField(max_length=200)
+    chapter = models.CharField(max_length=200)
+    question_id = models.CharField(max_length=200)
+    question_type = models.CharField(max_length=20, choices=QUESTION_TYPES, default="SCQ")
+    difficulty = models.PositiveSmallIntegerField(default=1) # 1 to 5
+    selected_answer = models.CharField(max_length=200, blank=True)
+    is_correct = models.BooleanField()
+    time_taken_secs = models.PositiveIntegerField(default=0)
+    mistake_type = models.CharField(max_length=50, choices=MISTAKE_TYPES, null=True, blank=True)
+    attempted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-attempted_at",)
+
+
+class WeeklyImprovement(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="weekly_improvements")
+    concept_name = models.CharField(max_length=200)
+    score_7d_ago = models.PositiveSmallIntegerField(default=0)
+    score_now = models.PositiveSmallIntegerField(default=0)
+    delta = models.IntegerField(default=0)
+    week_start = models.DateField()
+
+    class Meta:
+        ordering = ("-week_start", "-delta")
