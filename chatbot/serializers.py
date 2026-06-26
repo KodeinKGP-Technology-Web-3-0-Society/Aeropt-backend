@@ -1,7 +1,17 @@
 from rest_framework import serializers
 from django.utils import timezone
 
-from chatbot.models import ChatMessage, ChatSession, ConceptSnapshot
+from apis.models import Concept, ContentItem
+from chatbot.models import (
+    ChatMessage,
+    ChatSession,
+    ConceptSnapshot,
+    Conversation,
+    ConversationMessage,
+    MessageConcept,
+    StudySession,
+)
+from apis.serializers import ConceptSerializer, ContentItemSerializer
 
 
 class ConceptSnapshotSerializer(serializers.ModelSerializer):
@@ -70,3 +80,63 @@ class CreateChatSessionSerializer(serializers.Serializer):
 
 class SendMessageSerializer(serializers.Serializer):
     content = serializers.CharField(allow_blank=False, trim_whitespace=True)
+
+
+class StudySessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudySession
+        fields = ("id", "user", "type", "started_at", "ended_at", "duration_seconds")
+        read_only_fields = ("id", "started_at")
+
+
+class ConversationSerializer(serializers.ModelSerializer):
+    source_content_item = ContentItemSerializer(read_only=True)
+    source_content_item_id = serializers.PrimaryKeyRelatedField(
+        queryset=ContentItem.objects.all(),
+        source="source_content_item",
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = Conversation
+        fields = (
+            "id",
+            "user",
+            "study_session",
+            "title",
+            "source_content_item",
+            "source_content_item_id",
+            "created_at",
+        )
+        read_only_fields = ("id", "created_at")
+
+
+class ConversationMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConversationMessage
+        fields = (
+            "id",
+            "conversation",
+            "role",
+            "content",
+            "retrieved_content_ids",
+            "model",
+            "metadata",
+            "created_at",
+        )
+        read_only_fields = ("id", "created_at")
+
+
+class MessageConceptSerializer(serializers.ModelSerializer):
+    concept = ConceptSerializer(read_only=True)
+    concept_id = serializers.PrimaryKeyRelatedField(
+        queryset=Concept.objects.all(),
+        source="concept",
+        write_only=True,
+    )
+
+    class Meta:
+        model = MessageConcept
+        fields = ("id", "message", "concept", "concept_id", "relation")

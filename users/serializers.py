@@ -1,43 +1,178 @@
-"""
-users/serializers.py
-====================
-Serializers for the users app.
+from rest_framework import serializers
 
-PLANNED SERIALIZERS
--------------------
+from users.models import (
+    Achievement,
+    AuthSession,
+    Notification,
+    OAuthAccount,
+    Plan,
+    StudentProfile,
+    Subscription,
+    User,
+    UserAchievement,
+    UserPreferences,
+)
 
-RegisterSerializer
-  - Fields: email, password, confirm_password, first_name, last_name
-  - Validates: passwords match, email is unique
-  - Creates: User + StudentProfile (defaults: onboarding_done=False)
 
-LoginSerializer
-  - Fields: email, password
-  - Validates credentials, returns JWT access + refresh tokens
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=False, style={"input_type": "password"})
 
-TokenRefreshSerializer
-  - Fields: refresh
-  - Returns: new access token (wraps simplejwt)
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "phone",
+            "full_name",
+            "role",
+            "status",
+            "email_verified",
+            "phone_verified",
+            "avatar_url",
+            "last_login_at",
+            "created_at",
+            "updated_at",
+            "password",
+        )
+        read_only_fields = ("id", "created_at", "updated_at", "last_login_at")
 
-UserSerializer  (read-only profile output)
-  - Fields: id, email, first_name, last_name, is_verified, created_at
-  - Nested: StudentProfileSerializer
+    def create(self, validated_data):
+        password = validated_data.pop("password", None)
+        user = User(**validated_data)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
+        user.save()
+        return user
 
-StudentProfileSerializer
-  - Fields: exam_target, avatar_url, target_year, active_chapters, onboarding_done
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
 
-UpdateProfileSerializer  (PATCH /users/me/)
-  - Fields: first_name, last_name, avatar_url, target_year, exam_target
-  - All optional
 
-UpdateChaptersSerializer  (PATCH /users/me/chapters/)
-  - Fields: active_chapters (list of chapter slugs)
+class OAuthAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OAuthAccount
+        fields = ("id", "user", "provider", "provider_user_id", "email", "created_at")
+        read_only_fields = ("id", "created_at")
 
-ForgotPasswordSerializer
-  - Fields: email
 
-ResetPasswordSerializer
-  - Fields: token, new_password, confirm_password
-"""
+class AuthSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuthSession
+        fields = (
+            "id",
+            "user",
+            "refresh_token_hash",
+            "device_info",
+            "ip_address",
+            "expires_at",
+            "revoked_at",
+            "created_at",
+        )
+        read_only_fields = ("id", "created_at")
+        extra_kwargs = {"refresh_token_hash": {"write_only": True}}
 
-# Serializers will be implemented here.
+
+class StudentProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentProfile
+        fields = (
+            "user",
+            "target_exam",
+            "target_year",
+            "grade_level",
+            "school_name",
+            "city",
+            "state",
+            "daily_goal_minutes",
+            "onboarding_completed",
+            "onboarding_step",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("created_at", "updated_at")
+
+
+class UserPreferencesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPreferences
+        fields = (
+            "user",
+            "notify_email",
+            "notify_push",
+            "notify_revision",
+            "theme",
+            "preferred_language",
+            "updated_at",
+        )
+        read_only_fields = ("updated_at",)
+
+
+class PlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Plan
+        fields = ("id", "code", "name", "price_inr", "features", "is_active")
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    plan = PlanSerializer(read_only=True)
+    plan_id = serializers.PrimaryKeyRelatedField(
+        queryset=Plan.objects.all(), source="plan", write_only=True
+    )
+
+    class Meta:
+        model = Subscription
+        fields = (
+            "id",
+            "user",
+            "plan",
+            "plan_id",
+            "status",
+            "provider",
+            "external_subscription_id",
+            "started_at",
+            "current_period_end",
+            "canceled_at",
+        )
+        read_only_fields = ("id",)
+
+
+class AchievementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Achievement
+        fields = ("id", "code", "name", "description", "icon")
+
+
+class UserAchievementSerializer(serializers.ModelSerializer):
+    achievement = AchievementSerializer(read_only=True)
+    achievement_id = serializers.PrimaryKeyRelatedField(
+        queryset=Achievement.objects.all(), source="achievement", write_only=True
+    )
+
+    class Meta:
+        model = UserAchievement
+        fields = ("user", "achievement", "achievement_id", "earned_at")
+        read_only_fields = ("earned_at",)
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = (
+            "id",
+            "user",
+            "type",
+            "title",
+            "body",
+            "data",
+            "read_at",
+            "created_at",
+        )
+        read_only_fields = ("id", "created_at")

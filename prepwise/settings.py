@@ -31,6 +31,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 
 # Application definition
 
@@ -45,20 +47,20 @@ INSTALLED_APPS = [
     # Third-party — install these: pip install djangorestframework djangorestframework-simplejwt
     # django-cors-headers django-filter drf-spectacular celery redis openai python-dotenv psycopg2-binary
     'rest_framework',
-    # 'rest_framework_simplejwt',
+    'rest_framework_simplejwt',
     'corsheaders',
-    # 'django_filters',
+    'django_filters',
     # 'drf_spectacular',
 
     # Prepwise apps
     'users',       # custom User model, StudentProfile, JWT auth endpoints
+    'apis',        # content catalog + DRF config hub
     'chatbot',     # study sessions, chat messages, LLM integration, concept snapshots
     'analytics',   # concept proficiency, streaks, practice attempts, dashboard/progress data
-    'apis',        # DRF config hub, routing, shared utils, health-check
 ]
 
 # Custom user model — must be set before first migration
-# AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -152,3 +154,29 @@ CORS_ALLOWED_ORIGINS = [
     if origin.strip()
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "apis.pagination.StandardResultsPagination",
+    "PAGE_SIZE": 20,
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ],
+    "EXCEPTION_HANDLER": "apis.utils.custom_exception_handler",
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+}

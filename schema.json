@@ -1,0 +1,431 @@
+{
+  "tables": {
+    "users": {
+      "columns": {
+        "id": "uuid",
+        "email": "varchar",
+        "phone": "varchar(20)",
+        "full_name": "varchar(120)",
+        "password_hash": "text",
+        "role": "enum:user_role",
+        "status": "enum:account_status",
+        "email_verified": "boolean",
+        "phone_verified": "boolean",
+        "avatar_url": "text",
+        "last_login_at": "timestamptz",
+        "created_at": "timestamptz",
+        "updated_at": "timestamptz"
+      }
+    },
+    "oauth_accounts": {
+      "columns": {
+        "id": "uuid",
+        "user_id": "uuid",
+        "provider": "enum:oauth_provider",
+        "provider_user_id": "varchar(255)",
+        "email": "varchar",
+        "created_at": "timestamptz"
+      }
+    },
+    "auth_sessions": {
+      "columns": {
+        "id": "uuid",
+        "user_id": "uuid",
+        "refresh_token_hash": "text",
+        "device_info": "json",
+        "ip_address": "varchar",
+        "expires_at": "timestamptz",
+        "revoked_at": "timestamptz",
+        "created_at": "timestamptz"
+      }
+    },
+    "student_profiles": {
+      "columns": {
+        "user_id": "uuid",
+        "target_exam": "enum:target_exam",
+        "target_year": "smallint",
+        "grade_level": "enum:grade_level",
+        "school_name": "varchar(160)",
+        "city": "varchar(80)",
+        "state": "varchar(80)",
+        "daily_goal_minutes": "smallint",
+        "onboarding_completed": "boolean",
+        "onboarding_step": "smallint",
+        "created_at": "timestamptz",
+        "updated_at": "timestamptz"
+      }
+    },
+    "user_preferences": {
+      "columns": {
+        "user_id": "uuid",
+        "notify_email": "boolean",
+        "notify_push": "boolean",
+        "notify_revision": "boolean",
+        "theme": "varchar(20)",
+        "preferred_language": "varchar(10)",
+        "updated_at": "timestamptz"
+      }
+    },
+    "subjects": {
+      "columns": {
+        "id": "int",
+        "name": "varchar(40)",
+        "slug": "varchar(40)",
+        "order_index": "smallint"
+      }
+    },
+    "chapters": {
+      "columns": {
+        "id": "int",
+        "subject_id": "int",
+        "name": "varchar(120)",
+        "slug": "varchar(120)",
+        "order_index": "smallint"
+      }
+    },
+    "concepts": {
+      "columns": {
+        "id": "int",
+        "chapter_id": "int",
+        "name": "varchar(120)",
+        "slug": "varchar(120)",
+        "order_index": "smallint"
+      }
+    },
+    "concept_prerequisites": {
+      "columns": {
+        "concept_id": "int",
+        "prerequisite_concept_id": "int"
+      }
+    },
+    "content_items": {
+      "columns": {
+        "id": "uuid",
+        "vector_id": "varchar(128)",
+        "external_row_id": "varchar(64)",
+        "content_type": "enum:content_type",
+        "subject_id": "int",
+        "chapter_id": "int",
+        "primary_concept_id": "int",
+        "source_book": "enum:source_book",
+        "page_number": "varchar(20)",
+        "difficulty": "smallint",
+        "question_type": "enum:question_type",
+        "jee_year": "smallint",
+        "exam_type": "enum:exam_paper",
+        "target_exam": "enum:target_exam",
+        "has_diagram": "boolean",
+        "diagram_image_key": "text",
+        "solution_image_key": "text",
+        "is_active": "boolean",
+        "created_at": "timestamptz",
+        "updated_at": "timestamptz"
+      }
+    },
+    "content_secondary_concepts": {
+      "columns": {
+        "content_item_id": "uuid",
+        "concept_id": "int"
+      }
+    },
+    "study_sessions": {
+      "columns": {
+        "id": "uuid",
+        "user_id": "uuid",
+        "type": "enum:session_type",
+        "started_at": "timestamptz",
+        "ended_at": "timestamptz",
+        "duration_seconds": "int"
+      }
+    },
+    "conversations": {
+      "columns": {
+        "id": "uuid",
+        "user_id": "uuid",
+        "study_session_id": "uuid",
+        "title": "varchar(200)",
+        "source_content_item_id": "uuid",
+        "created_at": "timestamptz"
+      }
+    },
+    "messages": {
+      "columns": {
+        "id": "uuid",
+        "conversation_id": "uuid",
+        "role": "enum:message_role",
+        "content": "text",
+        "retrieved_content_ids": "text",
+        "model": "varchar(60)",
+        "metadata": "json",
+        "created_at": "timestamptz"
+      }
+    },
+    "message_concepts": {
+      "columns": {
+        "message_id": "uuid",
+        "concept_id": "int",
+        "relation": "enum:concept_relation"
+      }
+    },
+    "question_attempts": {
+      "columns": {
+        "id": "uuid",
+        "user_id": "uuid",
+        "content_item_id": "uuid",
+        "study_session_id": "uuid",
+        "submitted_answer": "json",
+        "is_correct": "boolean",
+        "error_type": "enum:error_type",
+        "time_taken_seconds": "int",
+        "hint_used": "boolean",
+        "attempt_number": "smallint",
+        "attempted_at": "timestamptz"
+      }
+    },
+    "concept_mastery": {
+      "columns": {
+        "user_id": "uuid",
+        "concept_id": "int",
+        "mastery_score": "decimal(5,2)",
+        "status": "enum:mastery_status",
+        "is_flagged_weak": "boolean",
+        "total_attempts": "int",
+        "correct_attempts": "int",
+        "last_practiced_at": "timestamptz",
+        "updated_at": "timestamptz"
+      }
+    },
+    "chapter_progress": {
+      "columns": {
+        "user_id": "uuid",
+        "chapter_id": "int",
+        "mastery_score": "decimal(5,2)",
+        "completion_percent": "decimal(5,2)",
+        "updated_at": "timestamptz"
+      }
+    },
+    "proficiency_snapshots": {
+      "columns": {
+        "user_id": "uuid",
+        "subject_id": "int",
+        "snapshot_date": "date",
+        "proficiency": "decimal(5,2)"
+      }
+    },
+    "learning_gaps": {
+      "columns": {
+        "id": "uuid",
+        "user_id": "uuid",
+        "concept_id": "int",
+        "severity": "smallint",
+        "source": "enum:session_type",
+        "detected_at": "timestamptz",
+        "resolved_at": "timestamptz"
+      }
+    },
+    "recommendations": {
+      "columns": {
+        "id": "uuid",
+        "user_id": "uuid",
+        "type": "enum:recommendation_type",
+        "concept_id": "int",
+        "content_item_id": "uuid",
+        "reason": "varchar(280)",
+        "score": "decimal(6,4)",
+        "served_at": "timestamptz",
+        "dismissed_at": "timestamptz",
+        "created_at": "timestamptz"
+      }
+    },
+    "assessments": {
+      "columns": {
+        "id": "uuid",
+        "user_id": "uuid",
+        "type": "enum:assessment_type",
+        "chapter_id": "int",
+        "concept_id": "int",
+        "total_questions": "smallint",
+        "score": "decimal(6,2)",
+        "max_score": "decimal(6,2)",
+        "status": "enum:assessment_status",
+        "started_at": "timestamptz",
+        "completed_at": "timestamptz"
+      }
+    },
+    "assessment_questions": {
+      "columns": {
+        "id": "uuid",
+        "assessment_id": "uuid",
+        "content_item_id": "uuid",
+        "step_index": "smallint",
+        "submitted_answer": "json",
+        "is_correct": "boolean",
+        "error_type": "enum:error_type",
+        "hint_shown": "boolean",
+        "retries_count": "smallint",
+        "is_flagged": "boolean",
+        "answered_at": "timestamptz"
+      }
+    },
+    "streaks": {
+      "columns": {
+        "user_id": "uuid",
+        "current_streak": "smallint",
+        "longest_streak": "smallint",
+        "last_active_date": "date",
+        "updated_at": "timestamptz"
+      }
+    },
+    "daily_activity": {
+      "columns": {
+        "user_id": "uuid",
+        "activity_date": "date",
+        "minutes_studied": "smallint",
+        "questions_attempted": "smallint",
+        "doubts_asked": "smallint",
+        "goal_met": "boolean"
+      }
+    },
+    "achievements": {
+      "columns": {
+        "id": "int",
+        "code": "varchar(60)",
+        "name": "varchar(120)",
+        "description": "text",
+        "icon": "varchar(60)"
+      }
+    },
+    "user_achievements": {
+      "columns": {
+        "user_id": "uuid",
+        "achievement_id": "int",
+        "earned_at": "timestamptz"
+      }
+    },
+    "notifications": {
+      "columns": {
+        "id": "uuid",
+        "user_id": "uuid",
+        "type": "enum:notification_type",
+        "title": "varchar(160)",
+        "body": "text",
+        "data": "json",
+        "read_at": "timestamptz",
+        "created_at": "timestamptz"
+      }
+    },
+    "content_flags": {
+      "columns": {
+        "id": "uuid",
+        "content_item_id": "uuid",
+        "reported_by": "uuid",
+        "reason": "varchar(280)",
+        "status": "enum:flag_status",
+        "resolved_by": "uuid",
+        "created_at": "timestamptz",
+        "resolved_at": "timestamptz"
+      }
+    },
+    "plans": {
+      "columns": {
+        "id": "int",
+        "code": "varchar(40)",
+        "name": "varchar(80)",
+        "price_inr": "int",
+        "features": "json",
+        "is_active": "boolean"
+      }
+    },
+    "subscriptions": {
+      "columns": {
+        "id": "uuid",
+        "user_id": "uuid",
+        "plan_id": "int",
+        "status": "varchar(20)",
+        "provider": "varchar(30)",
+        "external_subscription_id": "varchar(120)",
+        "started_at": "timestamptz",
+        "current_period_end": "timestamptz",
+        "canceled_at": "timestamptz"
+      }
+    }
+  },
+  "enums": {
+    "user_role": ["student", "admin", "content_collector", "reviewer", "mentor"],
+    "account_status": ["active", "suspended", "deleted"],
+    "target_exam": ["JEE_MAINS", "JEE_ADVANCED", "BOTH"],
+    "grade_level": ["CLASS_11", "CLASS_12", "DROPPER"],
+    "oauth_provider": ["google", "apple"],
+    "content_type": ["THEORY", "SOLVED_EXAMPLE", "PRACTICE_QUESTION", "PYQ"],
+    "source_book": ["HCV", "DC_PANDEY", "IRODOV", "PYQ"],
+    "question_type": ["SCQ", "MCQ", "NUMERICAL", "ASSERTION_REASON", "COMPREHENSION"],
+    "exam_paper": ["MAINS", "ADVANCED"],
+    "mastery_status": ["NOT_STARTED", "LEARNING", "WEAK", "PROFICIENT", "MASTERED"],
+    "session_type": ["DOUBT", "PRACTICE", "DIAGNOSTIC", "REVISION", "MOCK"],
+    "message_role": ["user", "assistant", "system"],
+    "concept_relation": ["IN_RESPONSE", "PREREQUISITE"],
+    "assessment_type": ["DIAGNOSTIC", "CHAPTER_TEST", "MOCK"],
+    "assessment_status": ["IN_PROGRESS", "COMPLETED", "ABANDONED"],
+    "error_type": ["CONCEPTUAL_GAP", "CALCULATION_ERROR", "MISINTERPRETATION", "PROCEDURAL_SLIP"],
+    "flag_status": ["OPEN", "TRIAGED", "RESOLVED", "DISMISSED"],
+    "recommendation_type": ["NEXT_QUESTION", "REVISE_CONCEPT", "LEARN_PREREQUISITE", "PRACTICE_WEAK"],
+    "notification_type": ["STREAK", "RECOMMENDATION", "ACHIEVEMENT", "SYSTEM", "REVISION_DUE"]
+  },
+  "relationships": {
+    "users": {
+      "has_one": ["student_profiles", "user_preferences", "streaks"],
+      "has_many": ["oauth_accounts", "auth_sessions", "study_sessions", "conversations", "question_attempts", "learning_gaps", "recommendations", "assessments", "notifications", "user_achievements", "subscriptions", "daily_activity"]
+    },
+    "student_profiles": { "belongs_to": ["users"] },
+    "user_preferences": { "belongs_to": ["users"] },
+    "oauth_accounts": { "belongs_to": ["users"] },
+    "auth_sessions": { "belongs_to": ["users"] },
+    "subjects": { "has_many": ["chapters", "content_items", "proficiency_snapshots"] },
+    "chapters": {
+      "belongs_to": ["subjects"],
+      "has_many": ["concepts", "content_items", "chapter_progress", "assessments"]
+    },
+    "concepts": {
+      "belongs_to": ["chapters"],
+      "has_many": ["concept_prerequisites", "content_secondary_concepts", "message_concepts", "concept_mastery", "learning_gaps", "recommendations", "assessments"]
+    },
+    "concept_prerequisites": { "belongs_to": ["concepts"] },
+    "content_items": {
+      "belongs_to": ["subjects", "chapters", "concepts"],
+      "has_many": ["content_secondary_concepts", "question_attempts", "recommendations", "assessment_questions", "content_flags"]
+    },
+    "content_secondary_concepts": { "belongs_to": ["content_items", "concepts"] },
+    "study_sessions": {
+      "belongs_to": ["users"],
+      "has_many": ["conversations", "question_attempts"]
+    },
+    "conversations": {
+      "belongs_to": ["users", "study_sessions"],
+      "has_many": ["messages"]
+    },
+    "messages": {
+      "belongs_to": ["conversations"],
+      "has_many": ["message_concepts"]
+    },
+    "message_concepts": { "belongs_to": ["messages", "concepts"] },
+    "question_attempts": { "belongs_to": ["users", "content_items", "study_sessions"] },
+    "concept_mastery": { "belongs_to": ["users", "concepts"] },
+    "chapter_progress": { "belongs_to": ["users", "chapters"] },
+    "proficiency_snapshots": { "belongs_to": ["users", "subjects"] },
+    "learning_gaps": { "belongs_to": ["users", "concepts"] },
+    "recommendations": { "belongs_to": ["users", "concepts", "content_items"] },
+    "assessments": {
+      "belongs_to": ["users", "chapters", "concepts"],
+      "has_many": ["assessment_questions"]
+    },
+    "assessment_questions": { "belongs_to": ["assessments", "content_items"] },
+    "streaks": { "belongs_to": ["users"] },
+    "daily_activity": { "belongs_to": ["users"] },
+    "achievements": { "has_many": ["user_achievements"] },
+    "user_achievements": { "belongs_to": ["users", "achievements"] },
+    "notifications": { "belongs_to": ["users"] },
+    "content_flags": { "belongs_to": ["content_items"] },
+    "plans": { "has_many": ["subscriptions"] },
+    "subscriptions": { "belongs_to": ["users", "plans"] }
+  }
+}

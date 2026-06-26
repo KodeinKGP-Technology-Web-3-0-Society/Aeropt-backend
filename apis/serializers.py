@@ -1,26 +1,125 @@
-"""
-apis/serializers.py
-===================
-Shared serializer mixins and base classes used across all apps.
+from rest_framework import serializers
 
-PLANNED CONTENT
----------------
+from apis.models import (
+    Chapter,
+    Concept,
+    ConceptPrerequisite,
+    ContentFlag,
+    ContentItem,
+    ContentSecondaryConcept,
+    Subject,
+)
 
-StandardResponseSerializer  (base mixin)
-  - Wraps any serializer output in:
-    { "success": true, "data": <serializer output>, "errors": null }
-  - On error:
-    { "success": false, "data": null, "errors": [{"field": "...", "message": "..."}] }
 
-ErrorDetailSerializer
-  - Fields: field (str or "non_field_errors"), message
+class SubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subject
+        fields = ("id", "name", "slug", "order_index")
 
-HealthCheckSerializer
-  - Fields: status, version
-  - Used by GET /api/v1/health/
 
-Note: Each app has its own serializers.py for domain-specific serializers.
-      This file is only for shared base classes.
-"""
+class ChapterSerializer(serializers.ModelSerializer):
+    subject = SubjectSerializer(read_only=True)
+    subject_id = serializers.PrimaryKeyRelatedField(
+        queryset=Subject.objects.all(), source="subject", write_only=True
+    )
 
-# Serializers will be implemented here.
+    class Meta:
+        model = Chapter
+        fields = ("id", "subject", "subject_id", "name", "slug", "order_index")
+
+
+class ConceptSerializer(serializers.ModelSerializer):
+    chapter = ChapterSerializer(read_only=True)
+    chapter_id = serializers.PrimaryKeyRelatedField(
+        queryset=Chapter.objects.all(), source="chapter", write_only=True
+    )
+
+    class Meta:
+        model = Concept
+        fields = ("id", "chapter", "chapter_id", "name", "slug", "order_index")
+
+
+class ConceptPrerequisiteSerializer(serializers.ModelSerializer):
+    concept = ConceptSerializer(read_only=True)
+    prerequisite_concept = ConceptSerializer(read_only=True)
+    concept_id = serializers.PrimaryKeyRelatedField(
+        queryset=Concept.objects.all(), source="concept", write_only=True
+    )
+    prerequisite_concept_id = serializers.PrimaryKeyRelatedField(
+        queryset=Concept.objects.all(), source="prerequisite_concept", write_only=True
+    )
+
+    class Meta:
+        model = ConceptPrerequisite
+        fields = (
+            "id",
+            "concept",
+            "concept_id",
+            "prerequisite_concept",
+            "prerequisite_concept_id",
+        )
+
+
+class ContentItemSerializer(serializers.ModelSerializer):
+    subject_id = serializers.PrimaryKeyRelatedField(
+        queryset=Subject.objects.all(), source="subject", write_only=True
+    )
+    chapter_id = serializers.PrimaryKeyRelatedField(
+        queryset=Chapter.objects.all(), source="chapter", write_only=True
+    )
+    primary_concept_id = serializers.PrimaryKeyRelatedField(
+        queryset=Concept.objects.all(), source="primary_concept", write_only=True
+    )
+
+    class Meta:
+        model = ContentItem
+        fields = (
+            "id",
+            "vector_id",
+            "external_row_id",
+            "content_type",
+            "subject_id",
+            "chapter_id",
+            "primary_concept_id",
+            "source_book",
+            "page_number",
+            "difficulty",
+            "question_type",
+            "jee_year",
+            "exam_type",
+            "target_exam",
+            "has_diagram",
+            "diagram_image_key",
+            "solution_image_key",
+            "is_active",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("id", "created_at", "updated_at")
+
+
+class ContentSecondaryConceptSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContentSecondaryConcept
+        fields = ("id", "content_item", "concept")
+
+
+class ContentFlagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContentFlag
+        fields = (
+            "id",
+            "content_item",
+            "reported_by",
+            "reason",
+            "status",
+            "resolved_by",
+            "created_at",
+            "resolved_at",
+        )
+        read_only_fields = ("id", "created_at")
+
+
+class HealthCheckSerializer(serializers.Serializer):
+    status = serializers.CharField()
+    version = serializers.CharField()

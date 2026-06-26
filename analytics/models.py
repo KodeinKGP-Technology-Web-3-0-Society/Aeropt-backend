@@ -159,10 +159,52 @@ SIGNAL HANDLER (analytics/signals.py — not a view)
     Updates ConceptProficiency rows + StudyStreak + invalidates cache.
 """
 
-from django.db import models
-
-# Models will be implemented here — see docstring above for schema.
 from django.conf import settings
+from django.db import models
+import uuid
+
+
+class MasteryStatus(models.TextChoices):
+    NOT_STARTED = "NOT_STARTED", "Not Started"
+    LEARNING = "LEARNING", "Learning"
+    WEAK = "WEAK", "Weak"
+    PROFICIENT = "PROFICIENT", "Proficient"
+    MASTERED = "MASTERED", "Mastered"
+
+
+class SessionType(models.TextChoices):
+    DOUBT = "DOUBT", "Doubt"
+    PRACTICE = "PRACTICE", "Practice"
+    DIAGNOSTIC = "DIAGNOSTIC", "Diagnostic"
+    REVISION = "REVISION", "Revision"
+    MOCK = "MOCK", "Mock"
+
+
+class ErrorType(models.TextChoices):
+    CONCEPTUAL_GAP = "CONCEPTUAL_GAP", "Conceptual Gap"
+    CALCULATION_ERROR = "CALCULATION_ERROR", "Calculation Error"
+    MISINTERPRETATION = "MISINTERPRETATION", "Misinterpretation"
+    PROCEDURAL_SLIP = "PROCEDURAL_SLIP", "Procedural Slip"
+
+
+class RecommendationType(models.TextChoices):
+    NEXT_QUESTION = "NEXT_QUESTION", "Next Question"
+    REVISE_CONCEPT = "REVISE_CONCEPT", "Revise Concept"
+    LEARN_PREREQUISITE = "LEARN_PREREQUISITE", "Learn Prerequisite"
+    PRACTICE_WEAK = "PRACTICE_WEAK", "Practice Weak"
+
+
+class AssessmentType(models.TextChoices):
+    DIAGNOSTIC = "DIAGNOSTIC", "Diagnostic"
+    CHAPTER_TEST = "CHAPTER_TEST", "Chapter Test"
+    MOCK = "MOCK", "Mock"
+
+
+class AssessmentStatus(models.TextChoices):
+    IN_PROGRESS = "IN_PROGRESS", "In Progress"
+    COMPLETED = "COMPLETED", "Completed"
+    ABANDONED = "ABANDONED", "Abandoned"
+
 
 class ConceptProficiency(models.Model):
     TREND_UP = "up"
@@ -250,3 +292,199 @@ class WeeklyImprovement(models.Model):
 
     class Meta:
         ordering = ("-week_start", "-delta")
+
+
+class ConceptMastery(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="concept_masteries")
+    concept = models.ForeignKey("apis.Concept", on_delete=models.CASCADE, related_name="concept_masteries")
+    mastery_score = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=MasteryStatus.choices, default=MasteryStatus.NOT_STARTED)
+    is_flagged_weak = models.BooleanField(default=False)
+    total_attempts = models.IntegerField(default=0)
+    correct_attempts = models.IntegerField(default=0)
+    last_practiced_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "concept_mastery"
+        unique_together = (("user", "concept"),)
+        ordering = ("concept_id",)
+
+    def __str__(self):
+        return f"{self.user_id}:{self.concept_id}:{self.mastery_score}"
+
+
+class ChapterProgress(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="chapter_progress")
+    chapter = models.ForeignKey("apis.Chapter", on_delete=models.CASCADE, related_name="chapter_progress")
+    mastery_score = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    completion_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "chapter_progress"
+        unique_together = (("user", "chapter"),)
+        ordering = ("chapter_id",)
+
+    def __str__(self):
+        return f"{self.user_id}:{self.chapter_id}"
+
+
+class ProficiencySnapshot(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="proficiency_snapshots")
+    subject = models.ForeignKey("apis.Subject", on_delete=models.CASCADE, related_name="proficiency_snapshots")
+    snapshot_date = models.DateField()
+    proficiency = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
+    class Meta:
+        db_table = "proficiency_snapshots"
+        unique_together = (("user", "subject", "snapshot_date"),)
+        ordering = ("-snapshot_date",)
+
+    def __str__(self):
+        return f"{self.user_id}:{self.subject_id}:{self.snapshot_date}"
+
+
+class LearningGap(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="learning_gaps")
+    concept = models.ForeignKey("apis.Concept", on_delete=models.CASCADE, related_name="learning_gaps")
+    severity = models.SmallIntegerField(default=1)
+    source = models.CharField(max_length=20, choices=SessionType.choices)
+    detected_at = models.DateTimeField(auto_now_add=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "learning_gaps"
+        ordering = ("-detected_at",)
+
+    def __str__(self):
+        return f"{self.user_id}:{self.concept_id}:{self.severity}"
+
+
+class Recommendation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="recommendations")
+    type = models.CharField(max_length=30, choices=RecommendationType.choices)
+    concept = models.ForeignKey(
+        "apis.Concept", on_delete=models.SET_NULL, null=True, blank=True, related_name="recommendations"
+    )
+    content_item = models.ForeignKey(
+        "apis.ContentItem", on_delete=models.SET_NULL, null=True, blank=True, related_name="recommendations"
+    )
+    reason = models.CharField(max_length=280, blank=True, default="")
+    score = models.DecimalField(max_digits=6, decimal_places=4, default=0)
+    served_at = models.DateTimeField(null=True, blank=True)
+    dismissed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "recommendations"
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.user_id}:{self.type}"
+
+
+class QuestionAttempt(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="question_attempts")
+    content_item = models.ForeignKey("apis.ContentItem", on_delete=models.CASCADE, related_name="question_attempts")
+    study_session = models.ForeignKey(
+        "chatbot.StudySession",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="question_attempts",
+    )
+    submitted_answer = models.JSONField(default=dict, blank=True)
+    is_correct = models.BooleanField()
+    error_type = models.CharField(max_length=30, choices=ErrorType.choices, blank=True, default="")
+    time_taken_seconds = models.IntegerField(default=0)
+    hint_used = models.BooleanField(default=False)
+    attempt_number = models.SmallIntegerField(default=1)
+    attempted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "question_attempts"
+        ordering = ("-attempted_at",)
+
+    def __str__(self):
+        return f"{self.user_id}:{self.content_item_id}"
+
+
+class Streak(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True, related_name="streak")
+    current_streak = models.SmallIntegerField(default=0)
+    longest_streak = models.SmallIntegerField(default=0)
+    last_active_date = models.DateField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "streaks"
+
+    def __str__(self):
+        return f"{self.user_id}: current={self.current_streak}"
+
+
+class DailyActivity(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="daily_activities")
+    activity_date = models.DateField()
+    minutes_studied = models.SmallIntegerField(default=0)
+    questions_attempted = models.SmallIntegerField(default=0)
+    doubts_asked = models.SmallIntegerField(default=0)
+    goal_met = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "daily_activity"
+        unique_together = (("user", "activity_date"),)
+        ordering = ("-activity_date",)
+
+    def __str__(self):
+        return f"{self.user_id}:{self.activity_date}"
+
+
+class Assessment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="assessments")
+    type = models.CharField(max_length=20, choices=AssessmentType.choices)
+    chapter = models.ForeignKey(
+        "apis.Chapter", on_delete=models.SET_NULL, null=True, blank=True, related_name="assessments"
+    )
+    concept = models.ForeignKey(
+        "apis.Concept", on_delete=models.SET_NULL, null=True, blank=True, related_name="assessments"
+    )
+    total_questions = models.SmallIntegerField(default=0)
+    score = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    max_score = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=AssessmentStatus.choices, default=AssessmentStatus.IN_PROGRESS)
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "assessments"
+        ordering = ("-started_at",)
+
+    def __str__(self):
+        return f"{self.user_id}:{self.type}:{self.status}"
+
+
+class AssessmentQuestion(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    assessment = models.ForeignKey(Assessment, on_delete=models.CASCADE, related_name="questions")
+    content_item = models.ForeignKey("apis.ContentItem", on_delete=models.CASCADE, related_name="assessment_questions")
+    step_index = models.SmallIntegerField(default=0)
+    submitted_answer = models.JSONField(default=dict, blank=True)
+    is_correct = models.BooleanField(null=True, blank=True)
+    error_type = models.CharField(max_length=30, choices=ErrorType.choices, blank=True, default="")
+    hint_shown = models.BooleanField(default=False)
+    retries_count = models.SmallIntegerField(default=0)
+    is_flagged = models.BooleanField(default=False)
+    answered_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "assessment_questions"
+        ordering = ("step_index",)
+
+    def __str__(self):
+        return f"{self.assessment_id}:{self.step_index}"

@@ -1,47 +1,321 @@
-"""
-analytics/serializers.py
-========================
-Serializers for the analytics app.
+from rest_framework import serializers
 
-PLANNED SERIALIZERS
--------------------
+from apis.models import Chapter, Concept, ContentItem, Subject
+from analytics.models import (
+    Assessment,
+    AssessmentQuestion,
+    ChapterProgress,
+    ConceptMastery,
+    ConceptProficiency,
+    DailyActivity,
+    DailyProficiencySnapshot,
+    LearningGap,
+    PracticeAttempt,
+    ProficiencySnapshot,
+    QuestionAttempt,
+    Recommendation,
+    Streak,
+    StudyStreak,
+    WeeklyImprovement,
+)
+from apis.serializers import ChapterSerializer, ConceptSerializer, ContentItemSerializer, SubjectSerializer
 
-ConceptProficiencySerializer
-  - Fields: concept_name, chapter, score, attempts, correct_attempts, last_attempted, trend
-  - Used by GET /analytics/concepts/ and injected into LLM system prompt
 
-DailySnapshotSerializer
-  - Fields: date, chapter, avg_score
-  - Used to build the "Proficiency Over Time" line chart on Progress page
+class ConceptProficiencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConceptProficiency
+        fields = (
+            "id",
+            "user",
+            "concept_name",
+            "chapter",
+            "score",
+            "attempts",
+            "correct_attempts",
+            "last_attempted",
+            "trend",
+        )
+        read_only_fields = ("id", "last_attempted")
 
-StudyStreakSerializer
-  - Fields: current_streak, longest_streak, last_study_date, dots (7-element bool list)
-  - dots computed property: last 7 days with activity = True
 
-PracticeAttemptSerializer  (input)
-  - Fields: concept_name, chapter, question_id, question_type, difficulty,
-            selected_answer, is_correct, time_taken_secs, mistake_type
-  - mistake_type required only when is_correct=False
+class StudyStreakSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudyStreak
+        fields = ("id", "user", "current_streak", "longest_streak", "last_study_date")
 
-DashboardSerializer
-  - Fields: overall_proficiency, total_concepts_attempted, weak_concepts,
-            session_streak (nested StudyStreakSerializer), chapters
-  - chapters: list of ChapterHealthSerializer
 
-ChapterHealthSerializer
-  - Fields: name, rollup_score, concepts (list of ConceptProficiencySerializer)
+class DailyProficiencySnapshotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DailyProficiencySnapshot
+        fields = ("id", "user", "chapter", "date", "avg_score")
 
-ProgressSerializer
-  - Fields: total_attempts, overall_accuracy, most_improved,
-            proficiency_over_time, mistake_breakdown, concept_breakdown
-  - concept_breakdown: list of ConceptBreakdownSerializer
 
-ConceptBreakdownSerializer
-  - Fields: concept, chapter, score, attempts, accuracy, last_attempted, trend_data
-  - trend_data: list of last 5 daily scores (for the sparkline on Progress page)
+class PracticeAttemptSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PracticeAttempt
+        fields = (
+            "id",
+            "user",
+            "concept_name",
+            "chapter",
+            "question_id",
+            "question_type",
+            "difficulty",
+            "selected_answer",
+            "is_correct",
+            "time_taken_secs",
+            "mistake_type",
+            "attempted_at",
+        )
+        read_only_fields = ("id", "attempted_at")
 
-WeeklyImprovementSerializer
-  - Fields: concept_name, score_7d_ago, score_now, delta
-"""
 
-# Serializers will be implemented here.
+class WeeklyImprovementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WeeklyImprovement
+        fields = (
+            "id",
+            "user",
+            "concept_name",
+            "score_7d_ago",
+            "score_now",
+            "delta",
+            "week_start",
+        )
+
+
+class ConceptMasterySerializer(serializers.ModelSerializer):
+    concept = ConceptSerializer(read_only=True)
+    concept_id = serializers.PrimaryKeyRelatedField(
+        queryset=Concept.objects.all(),
+        source="concept",
+        write_only=True,
+    )
+
+    class Meta:
+        model = ConceptMastery
+        fields = (
+            "user",
+            "concept",
+            "concept_id",
+            "mastery_score",
+            "status",
+            "is_flagged_weak",
+            "total_attempts",
+            "correct_attempts",
+            "last_practiced_at",
+            "updated_at",
+        )
+        read_only_fields = ("updated_at",)
+
+
+class ChapterProgressSerializer(serializers.ModelSerializer):
+    chapter = ChapterSerializer(read_only=True)
+    chapter_id = serializers.PrimaryKeyRelatedField(
+        queryset=Chapter.objects.all(),
+        source="chapter",
+        write_only=True,
+    )
+
+    class Meta:
+        model = ChapterProgress
+        fields = (
+            "user",
+            "chapter",
+            "chapter_id",
+            "mastery_score",
+            "completion_percent",
+            "updated_at",
+        )
+        read_only_fields = ("updated_at",)
+
+
+class ProficiencySnapshotSerializer(serializers.ModelSerializer):
+    subject = SubjectSerializer(read_only=True)
+    subject_id = serializers.PrimaryKeyRelatedField(
+        queryset=Subject.objects.all(),
+        source="subject",
+        write_only=True,
+    )
+
+    class Meta:
+        model = ProficiencySnapshot
+        fields = ("user", "subject", "subject_id", "snapshot_date", "proficiency")
+
+
+class LearningGapSerializer(serializers.ModelSerializer):
+    concept = ConceptSerializer(read_only=True)
+    concept_id = serializers.PrimaryKeyRelatedField(
+        queryset=Concept.objects.all(),
+        source="concept",
+        write_only=True,
+    )
+
+    class Meta:
+        model = LearningGap
+        fields = (
+            "id",
+            "user",
+            "concept",
+            "concept_id",
+            "severity",
+            "source",
+            "detected_at",
+            "resolved_at",
+        )
+        read_only_fields = ("id", "detected_at")
+
+
+class RecommendationSerializer(serializers.ModelSerializer):
+    concept = ConceptSerializer(read_only=True)
+    content_item = ContentItemSerializer(read_only=True)
+    concept_id = serializers.PrimaryKeyRelatedField(
+        queryset=Concept.objects.all(),
+        source="concept",
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    content_item_id = serializers.PrimaryKeyRelatedField(
+        queryset=ContentItem.objects.all(),
+        source="content_item",
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = Recommendation
+        fields = (
+            "id",
+            "user",
+            "type",
+            "concept",
+            "concept_id",
+            "content_item",
+            "content_item_id",
+            "reason",
+            "score",
+            "served_at",
+            "dismissed_at",
+            "created_at",
+        )
+        read_only_fields = ("id", "created_at")
+
+
+class QuestionAttemptSerializer(serializers.ModelSerializer):
+    content_item = ContentItemSerializer(read_only=True)
+    content_item_id = serializers.PrimaryKeyRelatedField(
+        queryset=ContentItem.objects.all(),
+        source="content_item",
+        write_only=True,
+    )
+
+    class Meta:
+        model = QuestionAttempt
+        fields = (
+            "id",
+            "user",
+            "content_item",
+            "content_item_id",
+            "study_session",
+            "submitted_answer",
+            "is_correct",
+            "error_type",
+            "time_taken_seconds",
+            "hint_used",
+            "attempt_number",
+            "attempted_at",
+        )
+        read_only_fields = ("id", "attempted_at")
+
+
+class StreakSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Streak
+        fields = (
+            "user",
+            "current_streak",
+            "longest_streak",
+            "last_active_date",
+            "updated_at",
+        )
+        read_only_fields = ("updated_at",)
+
+
+class DailyActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DailyActivity
+        fields = (
+            "user",
+            "activity_date",
+            "minutes_studied",
+            "questions_attempted",
+            "doubts_asked",
+            "goal_met",
+        )
+
+
+class AssessmentSerializer(serializers.ModelSerializer):
+    chapter = ChapterSerializer(read_only=True)
+    concept = ConceptSerializer(read_only=True)
+    chapter_id = serializers.PrimaryKeyRelatedField(
+        queryset=Chapter.objects.all(),
+        source="chapter",
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    concept_id = serializers.PrimaryKeyRelatedField(
+        queryset=Concept.objects.all(),
+        source="concept",
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = Assessment
+        fields = (
+            "id",
+            "user",
+            "type",
+            "chapter",
+            "chapter_id",
+            "concept",
+            "concept_id",
+            "total_questions",
+            "score",
+            "max_score",
+            "status",
+            "started_at",
+            "completed_at",
+        )
+        read_only_fields = ("id", "started_at")
+
+
+class AssessmentQuestionSerializer(serializers.ModelSerializer):
+    content_item = ContentItemSerializer(read_only=True)
+    content_item_id = serializers.PrimaryKeyRelatedField(
+        queryset=ContentItem.objects.all(),
+        source="content_item",
+        write_only=True,
+    )
+
+    class Meta:
+        model = AssessmentQuestion
+        fields = (
+            "id",
+            "assessment",
+            "content_item",
+            "content_item_id",
+            "step_index",
+            "submitted_answer",
+            "is_correct",
+            "error_type",
+            "hint_shown",
+            "retries_count",
+            "is_flagged",
+            "answered_at",
+        )
+        read_only_fields = ("id",)

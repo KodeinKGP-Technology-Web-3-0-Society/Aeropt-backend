@@ -42,11 +42,10 @@ class _SessionMixin:
             raise NotAuthenticated("Authentication credentials were not provided.")
 
         User = get_user_model()
-        username = getattr(settings, "CHATBOT_DEV_USERNAME", "chatbot-dev")
         email = getattr(settings, "CHATBOT_DEV_EMAIL", "chatbot-dev@local.test")
         dev_user, _ = User.objects.get_or_create(
-            username=username,
-            defaults={"email": email, "is_active": True},
+            email=email,
+            defaults={"full_name": "Chatbot Dev", "is_active": True},
         )
         return dev_user
 
@@ -273,3 +272,67 @@ class ConceptSnapshotView(APIView, _SessionMixin):
             )
 
         return Response(data)
+
+
+from apis.viewsets import BaseModelViewSet, UserScopedViewSet
+from chatbot.models import Conversation, ConversationMessage, MessageConcept, StudySession
+from chatbot.serializers import (
+    ConversationMessageSerializer,
+    ConversationSerializer,
+    MessageConceptSerializer,
+    StudySessionSerializer,
+)
+
+
+class StudySessionViewSet(UserScopedViewSet):
+    queryset = StudySession.objects.select_related("user").all()
+    serializer_class = StudySessionSerializer
+    filterset_fields = ("type", "user")
+    ordering_fields = ("started_at", "ended_at")
+
+
+class ConversationViewSet(UserScopedViewSet):
+    queryset = Conversation.objects.select_related(
+        "user", "study_session", "source_content_item"
+    ).all()
+    serializer_class = ConversationSerializer
+    filterset_fields = ("user", "study_session")
+    search_fields = ("title")
+    ordering_fields = ("created_at",)
+
+
+class ConversationMessageViewSet(BaseModelViewSet):
+    queryset = ConversationMessage.objects.select_related("conversation").all()
+    serializer_class = ConversationMessageSerializer
+    filterset_fields = ("conversation", "role")
+    search_fields = ("content")
+    ordering_fields = ("created_at",)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if not user.is_authenticated:
+            if getattr(settings, "CHATBOT_AUTH_DISABLED", False):
+                return queryset
+            return queryset.none()
+        if user.is_staff:
+            return queryset
+        return queryset.filter(conversation__user=user)
+
+
+class MessageConceptViewSet(BaseModelViewSet):
+    queryset = MessageConcept.objects.select_related("message", "concept").all()
+    serializer_class = MessageConceptSerializer
+    filterset_fields = ("message", "concept", "relation")
+    ordering_fields = ("message", "concept")
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if not user.is_authenticated:
+            if getattr(settings, "CHATBOT_AUTH_DISABLED", False):
+                return queryset
+            return queryset.none()
+        if user.is_staff:
+            return queryset
+        return queryset.filter(message__conversation__user=user)

@@ -1,38 +1,36 @@
-"""
-users/urls.py
-=============
-Mounted at:
-  /api/v1/auth/   — authentication endpoints
-  /api/v1/users/  — profile endpoints
-
-All routes below are relative to their mount prefix.
-"""
-
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-# from users.views import (
-#     RegisterView,
-#     LoginView,
-#     LogoutView,
-#     TokenRefreshView,
-#     VerifyEmailView,
-#     ForgotPasswordView,
-#     ResetPasswordView,
-#     UserProfileView,
-#     UpdateChaptersView,
-# )
+from users.views import (
+    AchievementViewSet,
+    AuthSessionViewSet,
+    NotificationViewSet,
+    OAuthAccountViewSet,
+    PlanViewSet,
+    StudentProfileViewSet,
+    SubscriptionViewSet,
+    TokenObtainPairViewAlias,
+    TokenRefreshViewAlias,
+    UserAchievementViewSet,
+    UserPreferencesViewSet,
+    UserViewSet,
+)
 
-urlpatterns = [
-    # --- Auth endpoints (mounted under /api/v1/auth/) ---
-    # path('register/',        RegisterView.as_view(),       name='auth-register'),
-    # path('login/',           LoginView.as_view(),          name='auth-login'),
-    # path('logout/',          LogoutView.as_view(),         name='auth-logout'),
-    # path('token/refresh/',   TokenRefreshView.as_view(),   name='token-refresh'),
-    # path('verify-email/',    VerifyEmailView.as_view(),    name='verify-email'),
-    # path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
-    # path('reset-password/',  ResetPasswordView.as_view(),  name='reset-password'),
+router = DefaultRouter()
+router.register(r"", UserViewSet, basename="user")
+router.register(r"oauth-accounts", OAuthAccountViewSet, basename="oauth-account")
+router.register(r"auth-sessions", AuthSessionViewSet, basename="auth-session")
+router.register(r"student-profiles", StudentProfileViewSet, basename="student-profile")
+router.register(r"preferences", UserPreferencesViewSet, basename="user-preferences")
+router.register(r"plans", PlanViewSet, basename="plan")
+router.register(r"subscriptions", SubscriptionViewSet, basename="subscription")
+router.register(r"achievements", AchievementViewSet, basename="achievement")
+router.register(r"user-achievements", UserAchievementViewSet, basename="user-achievement")
+router.register(r"notifications", NotificationViewSet, basename="notification")
 
-    # --- Profile endpoints (mounted under /api/v1/users/) ---
-    # path('me/',              UserProfileView.as_view(),    name='user-me'),
-    # path('me/chapters/',     UpdateChaptersView.as_view(), name='user-chapters'),
+auth_urlpatterns = [
+    path("token/", TokenObtainPairViewAlias.as_view(), name="token-obtain"),
+    path("token/refresh/", TokenRefreshViewAlias.as_view(), name="token-refresh"),
 ]
+
+user_urlpatterns = router.urls

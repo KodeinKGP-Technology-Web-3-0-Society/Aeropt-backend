@@ -19,11 +19,10 @@ class _SessionMixin:
             raise NotAuthenticated("Authentication credentials were not provided.")
 
         User = get_user_model()
-        username = getattr(settings, "CHATBOT_DEV_USERNAME", "chatbot-dev")
         email = getattr(settings, "CHATBOT_DEV_EMAIL", "chatbot-dev@local.test")
         dev_user, _ = User.objects.get_or_create(
-            username=username,
-            defaults={"email": email, "is_active": True},
+            email=email,
+            defaults={"full_name": "Chatbot Dev", "is_active": True},
         )
         return dev_user
 
@@ -179,3 +178,159 @@ class DashboardView(APIView, _SessionMixin):
             "stats": stats,
             "conceptHealth": conceptHealth
         })
+
+
+from apis.viewsets import BaseModelViewSet, UserPrimaryKeyViewSet, UserScopedViewSet
+from analytics.models import (
+    Assessment,
+    AssessmentQuestion,
+    ChapterProgress,
+    ConceptMastery,
+    ConceptProficiency,
+    DailyActivity,
+    DailyProficiencySnapshot,
+    LearningGap,
+    PracticeAttempt,
+    ProficiencySnapshot,
+    QuestionAttempt,
+    Recommendation,
+    Streak,
+    StudyStreak,
+    WeeklyImprovement,
+)
+from analytics.serializers import (
+    AssessmentQuestionSerializer,
+    AssessmentSerializer,
+    ChapterProgressSerializer,
+    ConceptMasterySerializer,
+    ConceptProficiencySerializer,
+    DailyActivitySerializer,
+    DailyProficiencySnapshotSerializer,
+    LearningGapSerializer,
+    PracticeAttemptSerializer,
+    ProficiencySnapshotSerializer,
+    QuestionAttemptSerializer,
+    RecommendationSerializer,
+    StreakSerializer,
+    StudyStreakSerializer,
+    WeeklyImprovementSerializer,
+)
+
+
+class ConceptProficiencyViewSet(UserScopedViewSet):
+    queryset = ConceptProficiency.objects.select_related("user").all()
+    serializer_class = ConceptProficiencySerializer
+    filterset_fields = ("chapter", "trend", "user")
+    search_fields = ("concept_name", "chapter")
+    ordering_fields = ("score", "last_attempted", "attempts")
+
+
+class StudyStreakLegacyViewSet(UserScopedViewSet):
+    queryset = StudyStreak.objects.select_related("user").all()
+    serializer_class = StudyStreakSerializer
+    filterset_fields = ("user")
+    ordering_fields = ("current_streak", "longest_streak")
+
+
+class DailyProficiencySnapshotViewSet(UserScopedViewSet):
+    queryset = DailyProficiencySnapshot.objects.select_related("user").all()
+    serializer_class = DailyProficiencySnapshotSerializer
+    filterset_fields = ("chapter", "date", "user")
+    ordering_fields = ("date", "avg_score")
+
+
+class PracticeAttemptViewSet(UserScopedViewSet):
+    queryset = PracticeAttempt.objects.select_related("user").all()
+    serializer_class = PracticeAttemptSerializer
+    filterset_fields = ("chapter", "question_type", "is_correct", "mistake_type", "user")
+    search_fields = ("concept_name", "chapter", "question_id")
+    ordering_fields = ("attempted_at", "difficulty")
+
+
+class WeeklyImprovementViewSet(UserScopedViewSet):
+    queryset = WeeklyImprovement.objects.select_related("user").all()
+    serializer_class = WeeklyImprovementSerializer
+    filterset_fields = ("week_start", "user")
+    search_fields = ("concept_name")
+    ordering_fields = ("week_start", "delta")
+
+
+class ConceptMasteryViewSet(UserScopedViewSet):
+    queryset = ConceptMastery.objects.select_related("user", "concept").all()
+    serializer_class = ConceptMasterySerializer
+    filterset_fields = ("status", "is_flagged_weak", "user", "concept")
+    ordering_fields = ("mastery_score", "updated_at", "last_practiced_at")
+
+
+class ChapterProgressViewSet(UserScopedViewSet):
+    queryset = ChapterProgress.objects.select_related("user", "chapter").all()
+    serializer_class = ChapterProgressSerializer
+    filterset_fields = ("chapter", "user")
+    ordering_fields = ("mastery_score", "completion_percent", "updated_at")
+
+
+class ProficiencySnapshotViewSet(UserScopedViewSet):
+    queryset = ProficiencySnapshot.objects.select_related("user", "subject").all()
+    serializer_class = ProficiencySnapshotSerializer
+    filterset_fields = ("subject", "snapshot_date", "user")
+    ordering_fields = ("snapshot_date", "proficiency")
+
+
+class LearningGapViewSet(UserScopedViewSet):
+    queryset = LearningGap.objects.select_related("user", "concept").all()
+    serializer_class = LearningGapSerializer
+    filterset_fields = ("severity", "source", "user", "concept")
+    ordering_fields = ("detected_at", "resolved_at", "severity")
+
+
+class RecommendationViewSet(UserScopedViewSet):
+    queryset = Recommendation.objects.select_related("user", "concept", "content_item").all()
+    serializer_class = RecommendationSerializer
+    filterset_fields = ("type", "user", "concept", "content_item")
+    search_fields = ("reason")
+    ordering_fields = ("score", "created_at", "served_at")
+
+
+class QuestionAttemptViewSet(UserScopedViewSet):
+    queryset = QuestionAttempt.objects.select_related("user", "content_item", "study_session").all()
+    serializer_class = QuestionAttemptSerializer
+    filterset_fields = ("is_correct", "error_type", "user", "content_item", "study_session")
+    ordering_fields = ("attempted_at", "attempt_number")
+
+
+class StreakViewSet(UserPrimaryKeyViewSet):
+    queryset = Streak.objects.select_related("user").all()
+    serializer_class = StreakSerializer
+    lookup_field = "user_id"
+
+
+class DailyActivityViewSet(UserScopedViewSet):
+    queryset = DailyActivity.objects.select_related("user").all()
+    serializer_class = DailyActivitySerializer
+    filterset_fields = ("activity_date", "goal_met", "user")
+    ordering_fields = ("activity_date", "minutes_studied")
+
+
+class AssessmentViewSet(UserScopedViewSet):
+    queryset = Assessment.objects.select_related("user", "chapter", "concept").all()
+    serializer_class = AssessmentSerializer
+    filterset_fields = ("type", "status", "user", "chapter", "concept")
+    ordering_fields = ("started_at", "completed_at", "score")
+
+
+class AssessmentQuestionViewSet(BaseModelViewSet):
+    queryset = AssessmentQuestion.objects.select_related("assessment", "content_item").all()
+    serializer_class = AssessmentQuestionSerializer
+    filterset_fields = ("assessment", "content_item", "is_correct", "is_flagged")
+    ordering_fields = ("step_index", "answered_at")
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if not user.is_authenticated:
+            if getattr(settings, "CHATBOT_AUTH_DISABLED", False):
+                return queryset
+            return queryset.none()
+        if user.is_staff:
+            return queryset
+        return queryset.filter(assessment__user=user)

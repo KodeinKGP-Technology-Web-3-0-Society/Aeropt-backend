@@ -199,3 +199,97 @@ class ConceptSnapshot(models.Model):
 
     def __str__(self):
         return f"{self.message_id}:{self.concept_name}"
+
+
+class SessionType(models.TextChoices):
+    DOUBT = "DOUBT", "Doubt"
+    PRACTICE = "PRACTICE", "Practice"
+    DIAGNOSTIC = "DIAGNOSTIC", "Diagnostic"
+    REVISION = "REVISION", "Revision"
+    MOCK = "MOCK", "Mock"
+
+
+class MessageRole(models.TextChoices):
+    USER = "user", "User"
+    ASSISTANT = "assistant", "Assistant"
+    SYSTEM = "system", "System"
+
+
+class ConceptRelation(models.TextChoices):
+    IN_RESPONSE = "IN_RESPONSE", "In Response"
+    PREREQUISITE = "PREREQUISITE", "Prerequisite"
+
+
+class StudySession(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="study_sessions")
+    type = models.CharField(max_length=20, choices=SessionType.choices, default=SessionType.DOUBT)
+    started_at = models.DateTimeField(auto_now_add=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+    duration_seconds = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = "study_sessions"
+        ordering = ("-started_at",)
+
+    def __str__(self):
+        return f"{self.user_id}:{self.type}:{self.started_at.isoformat()}"
+
+
+class Conversation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="conversations")
+    study_session = models.ForeignKey(
+        StudySession,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="conversations",
+    )
+    title = models.CharField(max_length=200, blank=True, default="")
+    source_content_item = models.ForeignKey(
+        "apis.ContentItem",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="conversations",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "conversations"
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.user_id}:{self.title}"
+
+
+class ConversationMessage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
+    role = models.CharField(max_length=20, choices=MessageRole.choices)
+    content = models.TextField()
+    retrieved_content_ids = models.TextField(blank=True, default="")
+    model = models.CharField(max_length=60, blank=True, default="")
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "messages"
+        ordering = ("created_at",)
+
+    def __str__(self):
+        return f"{self.conversation_id}:{self.role}"
+
+
+class MessageConcept(models.Model):
+    message = models.ForeignKey(ConversationMessage, on_delete=models.CASCADE, related_name="message_concepts")
+    concept = models.ForeignKey("apis.Concept", on_delete=models.CASCADE, related_name="message_concepts")
+    relation = models.CharField(max_length=20, choices=ConceptRelation.choices)
+
+    class Meta:
+        db_table = "message_concepts"
+        unique_together = (("message", "concept", "relation"),)
+
+    def __str__(self):
+        return f"{self.message_id}:{self.concept_id}:{self.relation}"
