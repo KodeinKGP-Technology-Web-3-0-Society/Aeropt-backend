@@ -86,7 +86,7 @@ class StudySessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudySession
         fields = ("id", "user", "type", "started_at", "ended_at", "duration_seconds")
-        read_only_fields = ("id", "started_at")
+        read_only_fields = ("id", "started_at", "user")
 
 
 class ConversationSerializer(serializers.ModelSerializer):
@@ -110,7 +110,7 @@ class ConversationSerializer(serializers.ModelSerializer):
             "source_content_item_id",
             "created_at",
         )
-        read_only_fields = ("id", "created_at")
+        read_only_fields = ("id", "created_at", "user")
 
 
 class ConversationMessageSerializer(serializers.ModelSerializer):

@@ -35,3 +35,7 @@ db.sqlite3
 # Celery
 celerybeat-schedule
 celerybeat.pid
+
+/bruno
+/scripts
+API_REFERENCE.md

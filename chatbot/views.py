@@ -297,7 +297,7 @@ class ConversationViewSet(UserScopedViewSet):
     ).all()
     serializer_class = ConversationSerializer
     filterset_fields = ("user", "study_session")
-    search_fields = ("title")
+    search_fields = ("title",)
     ordering_fields = ("created_at",)
 
 
@@ -305,7 +305,7 @@ class ConversationMessageViewSet(BaseModelViewSet):
     queryset = ConversationMessage.objects.select_related("conversation").all()
     serializer_class = ConversationMessageSerializer
     filterset_fields = ("conversation", "role")
-    search_fields = ("content")
+    search_fields = ("content",)
     ordering_fields = ("created_at",)
 
     def get_queryset(self):

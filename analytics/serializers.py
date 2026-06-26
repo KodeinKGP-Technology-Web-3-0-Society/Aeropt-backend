@@ -35,19 +35,21 @@ class ConceptProficiencySerializer(serializers.ModelSerializer):
             "last_attempted",
             "trend",
         )
-        read_only_fields = ("id", "last_attempted")
+        read_only_fields = ("id", "last_attempted", "user")
 
 
 class StudyStreakSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudyStreak
         fields = ("id", "user", "current_streak", "longest_streak", "last_study_date")
+        read_only_fields = ("id", "user")
 
 
 class DailyProficiencySnapshotSerializer(serializers.ModelSerializer):
     class Meta:
         model = DailyProficiencySnapshot
         fields = ("id", "user", "chapter", "date", "avg_score")
+        read_only_fields = ("id", "user")
 
 
 class PracticeAttemptSerializer(serializers.ModelSerializer):
@@ -67,7 +69,7 @@ class PracticeAttemptSerializer(serializers.ModelSerializer):
             "mistake_type",
             "attempted_at",
         )
-        read_only_fields = ("id", "attempted_at")
+        read_only_fields = ("id", "attempted_at", "user")
 
 
 class WeeklyImprovementSerializer(serializers.ModelSerializer):
@@ -82,6 +84,7 @@ class WeeklyImprovementSerializer(serializers.ModelSerializer):
             "delta",
             "week_start",
         )
+        read_only_fields = ("id", "user")
 
 
 class ConceptMasterySerializer(serializers.ModelSerializer):
@@ -106,7 +109,7 @@ class ConceptMasterySerializer(serializers.ModelSerializer):
             "last_practiced_at",
             "updated_at",
         )
-        read_only_fields = ("updated_at",)
+        read_only_fields = ("updated_at", "user")
 
 
 class ChapterProgressSerializer(serializers.ModelSerializer):
@@ -127,7 +130,7 @@ class ChapterProgressSerializer(serializers.ModelSerializer):
             "completion_percent",
             "updated_at",
         )
-        read_only_fields = ("updated_at",)
+        read_only_fields = ("updated_at", "user")
 
 
 class ProficiencySnapshotSerializer(serializers.ModelSerializer):
@@ -141,6 +144,7 @@ class ProficiencySnapshotSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProficiencySnapshot
         fields = ("user", "subject", "subject_id", "snapshot_date", "proficiency")
+        read_only_fields = ("user",)
 
 
 class LearningGapSerializer(serializers.ModelSerializer):
@@ -163,7 +167,7 @@ class LearningGapSerializer(serializers.ModelSerializer):
             "detected_at",
             "resolved_at",
         )
-        read_only_fields = ("id", "detected_at")
+        read_only_fields = ("id", "detected_at", "user")
 
 
 class RecommendationSerializer(serializers.ModelSerializer):
@@ -200,7 +204,7 @@ class RecommendationSerializer(serializers.ModelSerializer):
             "dismissed_at",
             "created_at",
         )
-        read_only_fields = ("id", "created_at")
+        read_only_fields = ("id", "created_at", "user")
 
 
 class QuestionAttemptSerializer(serializers.ModelSerializer):
@@ -227,7 +231,7 @@ class QuestionAttemptSerializer(serializers.ModelSerializer):
             "attempt_number",
             "attempted_at",
         )
-        read_only_fields = ("id", "attempted_at")
+        read_only_fields = ("id", "attempted_at", "user")
 
 
 class StreakSerializer(serializers.ModelSerializer):
@@ -240,7 +244,7 @@ class StreakSerializer(serializers.ModelSerializer):
             "last_active_date",
             "updated_at",
         )
-        read_only_fields = ("updated_at",)
+        read_only_fields = ("updated_at", "user")
 
 
 class DailyActivitySerializer(serializers.ModelSerializer):
@@ -254,6 +258,7 @@ class DailyActivitySerializer(serializers.ModelSerializer):
             "doubts_asked",
             "goal_met",
         )
+        read_only_fields = ("user",)
 
 
 class AssessmentSerializer(serializers.ModelSerializer):
@@ -291,7 +296,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
             "started_at",
             "completed_at",
         )
-        read_only_fields = ("id", "started_at")
+        read_only_fields = ("id", "started_at", "user")
 
 
 class AssessmentQuestionSerializer(serializers.ModelSerializer):

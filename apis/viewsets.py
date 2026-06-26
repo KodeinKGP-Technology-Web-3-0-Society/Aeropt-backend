@@ -66,3 +66,18 @@ class UserPrimaryKeyViewSet(UserScopedViewSet):
         if self.kwargs.get(self.lookup_field) == "me":
             self.kwargs[self.lookup_field] = str(self.get_actor_user().id)
         return super().get_object()
+
+    def perform_create(self, serializer):
+        user = self.get_actor_user()
+        model_class = serializer.Meta.model
+        user_field = model_class._meta.get_field("user")
+        if user_field.primary_key:
+            defaults = {
+                key: value
+                for key, value in serializer.validated_data.items()
+                if key != "user"
+            }
+            instance, _ = model_class.objects.update_or_create(user=user, defaults=defaults)
+            serializer.instance = instance
+            return
+        serializer.save(user=user)

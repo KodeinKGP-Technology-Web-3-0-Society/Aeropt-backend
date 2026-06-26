@@ -60,7 +60,7 @@ class OAuthAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = OAuthAccount
         fields = ("id", "user", "provider", "provider_user_id", "email", "created_at")
-        read_only_fields = ("id", "created_at")
+        read_only_fields = ("id", "created_at", "user")
 
 
 class AuthSessionSerializer(serializers.ModelSerializer):
@@ -76,7 +76,7 @@ class AuthSessionSerializer(serializers.ModelSerializer):
             "revoked_at",
             "created_at",
         )
-        read_only_fields = ("id", "created_at")
+        read_only_fields = ("id", "created_at", "user")
         extra_kwargs = {"refresh_token_hash": {"write_only": True}}
 
 
@@ -97,7 +97,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("created_at", "updated_at")
+        read_only_fields = ("user", "created_at", "updated_at")
 
 
 class UserPreferencesSerializer(serializers.ModelSerializer):
@@ -112,7 +112,7 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
             "preferred_language",
             "updated_at",
         )
-        read_only_fields = ("updated_at",)
+        read_only_fields = ("user", "updated_at")
 
 
 class PlanSerializer(serializers.ModelSerializer):
@@ -141,7 +141,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "current_period_end",
             "canceled_at",
         )
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "user")
 
 
 class AchievementSerializer(serializers.ModelSerializer):
@@ -159,7 +159,7 @@ class UserAchievementSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAchievement
         fields = ("user", "achievement", "achievement_id", "earned_at")
-        read_only_fields = ("earned_at",)
+        read_only_fields = ("user", "earned_at")
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -175,4 +175,4 @@ class NotificationSerializer(serializers.ModelSerializer):
             "read_at",
             "created_at",
         )
-        read_only_fields = ("id", "created_at")
+        read_only_fields = ("id", "created_at", "user")

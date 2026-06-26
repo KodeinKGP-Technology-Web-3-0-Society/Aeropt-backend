@@ -104,7 +104,7 @@ class SubscriptionViewSet(UserScopedViewSet):
 class AchievementViewSet(BaseModelViewSet):
     queryset = Achievement.objects.all()
     serializer_class = AchievementSerializer
-    filterset_fields = ("code")
+    filterset_fields = ("code",)
     search_fields = ("name", "code", "description")
     ordering_fields = ("id", "name")
 

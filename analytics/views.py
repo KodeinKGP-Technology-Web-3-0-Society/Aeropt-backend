@@ -228,7 +228,7 @@ class ConceptProficiencyViewSet(UserScopedViewSet):
 class StudyStreakLegacyViewSet(UserScopedViewSet):
     queryset = StudyStreak.objects.select_related("user").all()
     serializer_class = StudyStreakSerializer
-    filterset_fields = ("user")
+    filterset_fields = ("user",)
     ordering_fields = ("current_streak", "longest_streak")
 
 
@@ -251,7 +251,7 @@ class WeeklyImprovementViewSet(UserScopedViewSet):
     queryset = WeeklyImprovement.objects.select_related("user").all()
     serializer_class = WeeklyImprovementSerializer
     filterset_fields = ("week_start", "user")
-    search_fields = ("concept_name")
+    search_fields = ("concept_name",)
     ordering_fields = ("week_start", "delta")
 
 
@@ -287,7 +287,7 @@ class RecommendationViewSet(UserScopedViewSet):
     queryset = Recommendation.objects.select_related("user", "concept", "content_item").all()
     serializer_class = RecommendationSerializer
     filterset_fields = ("type", "user", "concept", "content_item")
-    search_fields = ("reason")
+    search_fields = ("reason",)
     ordering_fields = ("score", "created_at", "served_at")
 
 

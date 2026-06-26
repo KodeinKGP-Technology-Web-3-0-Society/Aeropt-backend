@@ -35,7 +35,7 @@ class HealthCheckView(APIView):
 class SubjectViewSet(BaseModelViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
-    filterset_fields = ("slug")
+    filterset_fields = ("slug",)
     search_fields = ("name", "slug")
     ordering_fields = ("order_index", "name", "id")
 
@@ -99,7 +99,7 @@ class ContentFlagViewSet(UserScopedViewSet):
     serializer_class = ContentFlagSerializer
     owner_field = "reported_by"
     filterset_fields = ("status", "content_item", "reported_by", "resolved_by")
-    search_fields = ("reason")
+    search_fields = ("reason",)
     ordering_fields = ("created_at", "resolved_at")
 
     def perform_create(self, serializer):
