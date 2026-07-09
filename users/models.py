@@ -73,6 +73,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email_verified = models.BooleanField(default=False)
     phone_verified = models.BooleanField(default=False)
     avatar_url = models.TextField(blank=True, default="")
+    supabase_user_id = models.UUIDField(null=True, blank=True, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     last_login_at = models.DateTimeField(null=True, blank=True)

@@ -4,9 +4,12 @@ from rest_framework.routers import DefaultRouter
 from users.views import (
     AchievementViewSet,
     AuthSessionViewSet,
+    LogoutView,
+    MeView,
     NotificationViewSet,
     OAuthAccountViewSet,
     PlanViewSet,
+    RegisterView,
     StudentProfileViewSet,
     SubscriptionViewSet,
     TokenObtainPairViewAlias,
@@ -29,8 +32,11 @@ router.register(r"notifications", NotificationViewSet, basename="notification")
 router.register(r"", UserViewSet, basename="user")
 
 auth_urlpatterns = [
+    path("register/", RegisterView.as_view(), name="register"),
     path("token/", TokenObtainPairViewAlias.as_view(), name="token-obtain"),
     path("token/refresh/", TokenRefreshViewAlias.as_view(), name="token-refresh"),
+    path("logout/", LogoutView.as_view(), name="logout"),
+    path("me/", MeView.as_view(), name="me"),
 ]
 
 user_urlpatterns = router.urls

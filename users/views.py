@@ -1,9 +1,14 @@
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework import serializers, status
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apis.viewsets import BaseModelViewSet, UserPrimaryKeyViewSet, UserScopedViewSet
 from users.models import (
+    AccountStatus,
     Achievement,
     AuthSession,
     Notification,
@@ -15,12 +20,14 @@ from users.models import (
     UserAchievement,
     UserPreferences,
 )
+from users.supabase_sync import ensure_supabase_user
 from users.serializers import (
     AchievementSerializer,
     AuthSessionSerializer,
     NotificationSerializer,
     OAuthAccountSerializer,
     PlanSerializer,
+    RegisterSerializer,
     StudentProfileSerializer,
     SubscriptionSerializer,
     UserAchievementSerializer,
@@ -31,6 +38,23 @@ from users.serializers import (
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = User.USERNAME_FIELD
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        user = self.user
+        if user.status != AccountStatus.ACTIVE:
+            raise serializers.ValidationError("This account is not active.")
+        if not user.is_active:
+            raise serializers.ValidationError("This account has been disabled.")
+        supabase_user_id = ensure_supabase_user(user)
+        data["supabase_user_id"] = supabase_user_id
+        data["user"] = {
+            "id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "supabase_user_id": supabase_user_id,
+        }
+        return data
 
 
 class UserViewSet(BaseModelViewSet):
@@ -54,6 +78,11 @@ class UserViewSet(BaseModelViewSet):
         if self.request.user.is_staff:
             return queryset
         return queryset.filter(id=self.request.user.id)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["request"] = self.request
+        return context
 
 
 class OAuthAccountViewSet(UserScopedViewSet):
@@ -93,6 +122,11 @@ class PlanViewSet(BaseModelViewSet):
     search_fields = ("name", "code")
     ordering_fields = ("id", "price_inr", "name")
 
+    def get_permissions(self):
+        if self.action in ("create", "update", "partial_update", "destroy"):
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
+
 
 class SubscriptionViewSet(UserScopedViewSet):
     queryset = Subscription.objects.select_related("user", "plan").all()
@@ -107,6 +141,11 @@ class AchievementViewSet(BaseModelViewSet):
     filterset_fields = ("code",)
     search_fields = ("name", "code", "description")
     ordering_fields = ("id", "name")
+
+    def get_permissions(self):
+        if self.action in ("create", "update", "partial_update", "destroy"):
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
 
 
 class UserAchievementViewSet(UserScopedViewSet):
@@ -130,3 +169,43 @@ class TokenObtainPairViewAlias(TokenObtainPairView):
 
 class TokenRefreshViewAlias(TokenRefreshView):
     pass
+
+
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        ensure_supabase_user(user)
+        return Response(UserSerializer(user, context={"request": request}).data, status=status.HTTP_201_CREATED)
+
+
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        supabase_user_id = ensure_supabase_user(user)
+        return Response({
+            "id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "supabase_user_id": supabase_user_id,
+        })
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response({"detail": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception:
+            return Response({"detail": "Invalid or expired refresh token."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_205_RESET_CONTENT)

@@ -28,7 +28,10 @@ django-celery-beat==2.7.0
 # Environment variables
 python-dotenv==1.0.1
 
-# Database — PostgreSQL for production (SQLite used in dev)
+# Supabase — analytics bridge to agent data store
+supabase==2.10.0
+
+# Database — PostgreSQL via Supabase (django schema for Django ORM tables)
 psycopg2-binary==2.9.10
 
 # Utilities

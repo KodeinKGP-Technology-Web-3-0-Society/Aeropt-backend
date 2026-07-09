@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from users.models import (
     Achievement,
+    AccountStatus,
     AuthSession,
     Notification,
     OAuthAccount,
@@ -11,6 +12,7 @@ from users.models import (
     User,
     UserAchievement,
     UserPreferences,
+    UserRole,
 )
 
 
@@ -29,12 +31,22 @@ class UserSerializer(serializers.ModelSerializer):
             "email_verified",
             "phone_verified",
             "avatar_url",
+            "supabase_user_id",
             "last_login_at",
             "created_at",
             "updated_at",
             "password",
         )
-        read_only_fields = ("id", "created_at", "updated_at", "last_login_at")
+        read_only_fields = ("id", "created_at", "updated_at", "last_login_at", "supabase_user_id")
+
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get("request")
+        if request and not request.user.is_staff:
+            for field_name in ("role", "status", "email_verified", "phone_verified"):
+                if field_name in fields:
+                    fields[field_name].read_only = True
+        return fields
 
     def create(self, validated_data):
         password = validated_data.pop("password", None)
@@ -48,12 +60,38 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         password = validated_data.pop("password", None)
+        request = self.context.get("request")
+        if request and not request.user.is_staff:
+            for field_name in ("role", "status", "email_verified", "phone_verified"):
+                validated_data.pop(field_name, None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         if password:
             instance.set_password(password)
         instance.save()
         return instance
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=8, style={"input_type": "password"})
+
+    class Meta:
+        model = User
+        fields = ("email", "password", "full_name")
+
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value.lower()
+
+    def create(self, validated_data):
+        return User.objects.create_user(
+            email=validated_data["email"],
+            password=validated_data["password"],
+            full_name=validated_data.get("full_name", ""),
+            role=UserRole.STUDENT,
+            status=AccountStatus.ACTIVE,
+        )
 
 
 class OAuthAccountSerializer(serializers.ModelSerializer):

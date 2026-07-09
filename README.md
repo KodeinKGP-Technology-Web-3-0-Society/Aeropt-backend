@@ -67,7 +67,7 @@ All endpoints are versioned under `/api/v1/`. See [.claude/API_PLAN.md](.claude/
 - **LLM** — Anthropic Claude (`anthropic` SDK, direct connection)
 - **Async tasks** — Celery + Redis
 - **API docs** — drf-spectacular (Swagger UI at `/api/docs/`)
-- **DB** — SQLite (dev) → PostgreSQL (production)
+- **DB** — Supabase PostgreSQL (`django` schema for Django ORM; agent tables in `public`)
 
 ## Docs
 

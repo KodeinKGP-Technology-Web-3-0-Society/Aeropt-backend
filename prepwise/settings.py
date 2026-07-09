@@ -24,12 +24,16 @@ load_dotenv(BASE_DIR / ".env")
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-w3^4cvn^+3_@!z282^z0l_3uto)#k_jkgq=h%ckr4dzt4+66u7'
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-w3^4cvn^+3_@!z282^z0l_3uto)#k_jkgq=h%ckr4dzt4+66u7")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True").strip().lower() in ("1", "true", "yes", "on")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -48,6 +52,7 @@ INSTALLED_APPS = [
     # django-cors-headers django-filter drf-spectacular celery redis openai python-dotenv psycopg2-binary
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
     # 'drf_spectacular',
@@ -93,15 +98,77 @@ TEMPLATES = [
 WSGI_APPLICATION = 'prepwise.wsgi.application'
 
 
-# Database
+# Database — Supabase PostgreSQL (django schema; agent tables live in public)
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+from django.core.exceptions import ImproperlyConfigured
+from urllib.parse import unquote, urlparse
+
+
+def _supabase_db_host_from_url(supabase_url: str) -> str:
+    """Derive direct Postgres host from https://<ref>.supabase.co."""
+    ref = supabase_url.replace("https://", "").replace("http://", "").split(".")[0].strip("/")
+    if ref:
+        return f"db.{ref}.supabase.co"
+    return ""
+
+
+def _build_database_config():
+    schema = os.getenv("DB_SCHEMA", "django").strip() or "django"
+    sslmode = os.getenv("DB_SSLMODE", "require").strip() or "require"
+    options = {
+        "sslmode": sslmode,
+        "options": f"-c search_path={schema},public",
     }
-}
+
+    database_url = os.getenv("DATABASE_URL", "").strip()
+    if database_url:
+        parsed = urlparse(database_url)
+        if parsed.scheme not in ("postgresql", "postgres"):
+            raise ImproperlyConfigured("DATABASE_URL must use the postgresql:// scheme.")
+        return {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": (parsed.path or "/postgres").lstrip("/") or "postgres",
+            "USER": unquote(parsed.username or "postgres"),
+            "PASSWORD": unquote(parsed.password or ""),
+            "HOST": parsed.hostname or "",
+            "PORT": str(parsed.port or 5432),
+            "OPTIONS": options,
+        }
+
+    engine = os.getenv("DB_ENGINE", "django.db.backends.postgresql").strip()
+    name = os.getenv("DB_NAME", "postgres").strip()
+    user = os.getenv("DB_USER", "postgres").strip()
+    password = os.getenv("DB_PASSWORD", "").strip()
+    host = os.getenv("DB_HOST", "").strip()
+    port = os.getenv("DB_PORT", "5432").strip()
+
+    if not host:
+        host = _supabase_db_host_from_url(os.getenv("SUPABASE_URL", "").strip())
+
+    if not password:
+        raise ImproperlyConfigured(
+            "Set DATABASE_URL or DB_PASSWORD in Aeropt-backend/.env. "
+            "Find the database password in Supabase Dashboard → Project Settings → Database."
+        )
+    if not host:
+        raise ImproperlyConfigured(
+            "Set DATABASE_URL, DB_HOST, or SUPABASE_URL in Aeropt-backend/.env."
+        )
+
+    return {
+        "ENGINE": engine,
+        "NAME": name,
+        "USER": user,
+        "PASSWORD": password,
+        "HOST": host,
+        "PORT": port,
+        "OPTIONS": options,
+    }
+
+
+DATABASES = {"default": _build_database_config()}
+DB_SCHEMA = os.getenv("DB_SCHEMA", "django").strip() or "django"
 
 
 # Password validation
@@ -144,6 +211,9 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_API_BASE = os.getenv("GROQ_API_BASE", "https://api.groq.com/openai/v1")
 CHATBOT_MODEL = os.getenv("CHATBOT_MODEL", "llama-3.3-70b-versatile")
 CHATBOT_MAX_TOKENS = int(os.getenv("CHATBOT_MAX_TOKENS", "1000"))
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+
 CHATBOT_AUTH_DISABLED = os.getenv("CHATBOT_AUTH_DISABLED", "false").strip().lower() in ("1", "true", "yes", "on")
 CHATBOT_DEV_USERNAME = os.getenv("CHATBOT_DEV_USERNAME", "chatbot-dev")
 CHATBOT_DEV_EMAIL = os.getenv("CHATBOT_DEV_EMAIL", "chatbot-dev@local.test")
@@ -158,7 +228,6 @@ CORS_ALLOW_CREDENTIALS = True
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -179,4 +248,5 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
 }
