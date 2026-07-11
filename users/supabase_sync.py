@@ -10,6 +10,8 @@ from typing import Any, Dict, List, Optional
 
 from django.conf import settings
 
+from users.placement import build_concept_state_rows, sandbox_summary_from_rows
+
 logger = logging.getLogger(__name__)
 
 _client = None
@@ -47,42 +49,138 @@ def _supabase_target_exam(user) -> str:
     return "JEE_ADVANCED"
 
 
+def _preferred_depth(user) -> str:
+    profile = getattr(user, "student_profile", None)
+    if profile and profile.preferred_depth:
+        return profile.preferred_depth
+    return "standard"
+
+
 def _read_concepts(client) -> List[Dict[str, Any]]:
     res = client.table("concepts").select("concept_id, concept_name, chapter, subject").execute()
     return res.data or []
 
 
-def _batch_create_user_concept_states(client, user_id: str, concepts: List[Dict[str, Any]]) -> None:
-    if not concepts:
+def get_physics_chapters(client=None) -> List[str]:
+    from users.placement_planner import get_physics_chapters_metadata
+
+    return [ch["name"] for ch in get_physics_chapters_metadata()]
+
+
+def _batch_create_user_concept_states(client, rows: List[Dict[str, Any]]) -> None:
+    if not rows:
         return
-    rows = [
-        {
-            "user_id": user_id,
-            "concept_id": concept["concept_id"],
-            "subject": concept.get("subject", "Physics"),
-            "chapter": concept.get("chapter"),
-            "proficiency_score": 0.5,
-            "attempts": 0,
-            "correct": 0,
-            "flagged_weak": False,
-            "struggle_streak": 0,
-            "error_type_dist": {
-                "conceptual": 0,
-                "procedural": 0,
-                "calculation": 0,
-                "misread": 0,
-            },
-            "avg_time_seconds": 0.0,
-            "is_cold_start": True,
-        }
-        for concept in concepts
-    ]
     client.table("user_concept_state").insert(rows).execute()
 
 
-def ensure_supabase_user(user) -> Optional[str]:
+def _upsert_user_concept_states(client, rows: List[Dict[str, Any]]) -> None:
+    """
+    Apply placement seed without DELETE (service_role may lack delete on this table).
+
+    Updates existing (user_id, concept_id) rows; inserts any missing concepts.
+    """
+    if not rows:
+        return
+
+    user_id = rows[0]["user_id"]
+    existing_res = (
+        client.table("user_concept_state")
+        .select("concept_id")
+        .eq("user_id", user_id)
+        .execute()
+    )
+    existing_ids = {r["concept_id"] for r in (existing_res.data or [])}
+
+    to_insert = [r for r in rows if r["concept_id"] not in existing_ids]
+    to_update = [r for r in rows if r["concept_id"] in existing_ids]
+
+    if to_insert:
+        client.table("user_concept_state").insert(to_insert).execute()
+
+    seed_fields = (
+        "subject",
+        "chapter",
+        "proficiency_score",
+        "attempts",
+        "correct",
+        "flagged_weak",
+        "struggle_streak",
+        "error_type_dist",
+        "avg_time_seconds",
+        "is_cold_start",
+    )
+    for row in to_update:
+        updates = {field: row[field] for field in seed_fields if field in row}
+        client.table("user_concept_state").update(updates).eq("user_id", user_id).eq(
+            "concept_id", row["concept_id"]
+        ).execute()
+
+
+def sync_profile_to_supabase(user) -> None:
+    """Push target_exam and preferred_depth to Supabase users row."""
+    if not is_supabase_configured():
+        return
+
+    supabase_id = ensure_supabase_user(user, seed_concepts=False)
+    if not supabase_id:
+        return
+
+    client = get_supabase_client()
+    if client is None:
+        return
+
+    try:
+        client.table("users").update(
+            {
+                "target_exam": _supabase_target_exam(user),
+                "preferred_depth": _preferred_depth(user),
+                "name": user.full_name or user.email,
+            }
+        ).eq("user_id", supabase_id).execute()
+    except Exception:
+        logger.exception("Failed to sync profile to Supabase for %s", user.id)
+
+
+def seed_user_concept_state_from_placement(user) -> Optional[Dict[str, Any]]:
+    """
+    Seed or replace user_concept_state rows from syllabus placement.
+    Returns sandbox summary dict for the reveal slide deck.
+    """
+    if not is_supabase_configured():
+        return None
+
+    supabase_id = ensure_supabase_user(user, seed_concepts=False)
+    if not supabase_id:
+        return None
+
+    client = get_supabase_client()
+    if client is None:
+        return None
+
+    concepts = _read_concepts(client)
+    if not concepts:
+        return None
+
+    placement = getattr(user, "syllabus_placement", None)
+    profile = getattr(user, "student_profile", None)
+    rows = build_concept_state_rows(supabase_id, concepts, placement)
+
+    try:
+        _upsert_user_concept_states(client, rows)
+    except Exception:
+        logger.exception("Failed to seed placement proficiency for %s", supabase_id)
+        return None
+
+    sync_profile_to_supabase(user)
+    return sandbox_summary_from_rows(profile, placement, rows)
+
+
+def ensure_supabase_user(user, *, seed_concepts: bool = True) -> Optional[str]:
     """
     Return the linked Supabase user_id for a Django user, creating/linking as needed.
+
+    Concept seeding is deferred until onboarding completes unless seed_concepts=True
+    and the user already finished onboarding (or has no profile gate).
     """
     if not is_supabase_configured():
         return None
@@ -116,13 +214,12 @@ def ensure_supabase_user(user) -> Optional[str]:
         "name": name,
         "email": user.email,
         "target_exam": _supabase_target_exam(user),
-        "preferred_depth": "standard",
+        "preferred_depth": _preferred_depth(user),
     }
 
     try:
         client.table("users").insert(row).execute()
     except Exception:
-        # Race or duplicate — re-fetch by email or id
         lookup = (
             client.table("users")
             .select("user_id")
@@ -144,19 +241,31 @@ def ensure_supabase_user(user) -> Optional[str]:
             logger.exception("Failed to create or resolve Supabase user for %s", user.id)
             return None
 
-    concepts = _read_concepts(client)
-    existing_states = (
-        client.table("user_concept_state")
-        .select("concept_id")
-        .eq("user_id", supabase_id)
-        .limit(1)
-        .execute()
-    )
-    if not existing_states.data and concepts:
-        try:
-            _batch_create_user_concept_states(client, supabase_id, concepts)
-        except Exception:
-            logger.exception("Failed to seed user_concept_state for %s", supabase_id)
+    profile = getattr(user, "student_profile", None)
+    onboarding_done = bool(profile and profile.onboarding_completed)
+
+    if seed_concepts:
+        concepts = _read_concepts(client)
+        existing_states = (
+            client.table("user_concept_state")
+            .select("concept_id")
+            .eq("user_id", supabase_id)
+            .limit(1)
+            .execute()
+        )
+        if not existing_states.data and concepts:
+            try:
+                if onboarding_done and hasattr(user, "syllabus_placement"):
+                    placement_rows = build_concept_state_rows(
+                        supabase_id, concepts, user.syllabus_placement
+                    )
+                    _batch_create_user_concept_states(client, placement_rows)
+                elif onboarding_done or profile is None:
+                    flat_rows = build_concept_state_rows(supabase_id, concepts, None)
+                    _batch_create_user_concept_states(client, flat_rows)
+                # else: defer until onboarding complete
+            except Exception:
+                logger.exception("Failed to seed user_concept_state for %s", supabase_id)
 
     try:
         user.supabase_user_id = uuid.UUID(str(supabase_id))

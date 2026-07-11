@@ -11,7 +11,7 @@ from apis.views import (
     HealthCheckView,
     SubjectViewSet,
 )
-from users.urls import auth_urlpatterns, user_urlpatterns
+from users.urls import auth_urlpatterns, onboarding_urlpatterns, user_urlpatterns
 
 router = DefaultRouter()
 router.register(r"subjects", SubjectViewSet, basename="subject")
@@ -25,7 +25,10 @@ router.register(r"content-flags", ContentFlagViewSet, basename="content-flag")
 urlpatterns = [
     path("health/", HealthCheckView.as_view(), name="health-check"),
     path("auth/", include((auth_urlpatterns, "users"), namespace="auth")),
+    path("onboarding/", include((onboarding_urlpatterns, "users"), namespace="onboarding")),
     path("users/", include((user_urlpatterns, "users"), namespace="users")),
     path("chat/", include("chatbot.urls")),
     path("analytics/", include("analytics.urls")),
+    path("roadmap/", include("roadmap.urls")),
+    path("sandbox/", include("sandbox.urls")),
 ] + router.urls

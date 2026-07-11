@@ -6,9 +6,11 @@ from users.models import (
     AuthSession,
     Notification,
     OAuthAccount,
+    OnboardingSession,
     Plan,
     StudentProfile,
     Subscription,
+    SyllabusPlacement,
     User,
     UserAchievement,
     UserPreferences,
@@ -130,12 +132,41 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "city",
             "state",
             "daily_goal_minutes",
+            "preferred_depth",
             "onboarding_completed",
             "onboarding_step",
             "created_at",
             "updated_at",
         )
         read_only_fields = ("user", "created_at", "updated_at")
+
+
+class SyllabusPlacementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SyllabusPlacement
+        fields = (
+            "user",
+            "journey_type",
+            "learning_source",
+            "covered_chapters",
+            "self_assessed_coverage",
+            "diagnostic_baseline",
+            "updated_at",
+        )
+        read_only_fields = ("user", "updated_at")
+
+
+class OnboardingSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OnboardingSession
+        fields = (
+            "user",
+            "current_step",
+            "snapshot",
+            "completed_at",
+            "updated_at",
+        )
+        read_only_fields = ("user", "updated_at")
 
 
 class UserPreferencesSerializer(serializers.ModelSerializer):

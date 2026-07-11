@@ -1,0 +1,244 @@
+subject: Physics
+chapters:
+  - name: Laws of Motion
+    order: 1
+    concepts:
+      - id: newtons_1st_law
+        name: Newton's 1st Law
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: newtons_2nd_law_f__ma
+        name: Newton's 2nd Law (F = ma)
+        prerequisites: [newtons_1st_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: newtons_3rd_law
+        name: Newton's 3rd Law
+        prerequisites: [newtons_1st_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: normal_force
+        name: Normal Force
+        prerequisites: [newtons_2nd_law_f__ma]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: tension
+        name: Tension
+        prerequisites: [newtons_2nd_law_f__ma]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: static_friction
+        name: Static Friction
+        prerequisites: [normal_force]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: kinetic_friction
+        name: Kinetic Friction
+        prerequisites: [static_friction]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: limiting_friction
+        name: Limiting Friction
+        prerequisites: [static_friction]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: free_body_diagram
+        name: Free Body Diagram
+        prerequisites: [newtons_2nd_law_f__ma]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: constraint_motion
+        name: Constraint Motion
+        prerequisites: [free_body_diagram, tension]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 14
+      - id: pulley_systems
+        name: Pulley Systems
+        prerequisites: [constraint_motion, tension]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 14
+      - id: wedge_problems
+        name: Wedge Problems
+        prerequisites: [constraint_motion]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+      - id: pseudo_force___non-inertial_frames
+        name: Pseudo Force / Non-inertial Frames
+        prerequisites: [newtons_2nd_law_f__ma]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 14
+
+  - name: Work Energy & Power
+    order: 2
+    concepts:
+      - id: work_by_constant_force
+        name: Work by Constant Force
+        prerequisites: [newtons_2nd_law_f__ma]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: work_by_variable_force
+        name: Work by Variable Force
+        prerequisites: [work_by_constant_force]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+      - id: kinetic_energy
+        name: Kinetic Energy
+        prerequisites: [newtons_2nd_law_f__ma]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: gravitational_pe
+        name: Gravitational PE
+        prerequisites: [work_by_constant_force]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: spring_pe_hookes_law
+        name: Spring PE (Hooke's Law)
+        prerequisites: [work_by_constant_force]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+      - id: work-energy_theorem
+        name: Work-Energy Theorem
+        prerequisites: [kinetic_energy, work_by_constant_force]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: conservative_vs_non-conservative_forces
+        name: Conservative vs Non-conservative Forces
+        prerequisites: [work-energy_theorem]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: conservation_of_mechanical_energy
+        name: Conservation of Mechanical Energy
+        prerequisites: [work-energy_theorem, gravitational_pe]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 14
+      - id: power
+        name: Power
+        prerequisites: [work_by_constant_force]
+        exam_weight: medium
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: Rotational Motion
+    order: 3
+    concepts:
+      - id: angular_kinematics
+        name: Angular Kinematics
+        prerequisites: [newtons_2nd_law_f__ma]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: torque
+        name: Torque
+        prerequisites: [newtons_2nd_law_f__ma]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: moment_of_inertia
+        name: Moment of Inertia
+        prerequisites: [torque, angular_kinematics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 14
+      - id: parallel_axis_theorem
+        name: Parallel Axis Theorem
+        prerequisites: [moment_of_inertia]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: perpendicular_axis_theorem
+        name: Perpendicular Axis Theorem
+        prerequisites: [moment_of_inertia]
+        exam_weight: low
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 65
+        estimated_minutes: 10
+      - id: rotational_ke
+        name: Rotational KE
+        prerequisites: [moment_of_inertia, kinetic_energy]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: angular_momentum
+        name: Angular Momentum
+        prerequisites: [torque, moment_of_inertia]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: conservation_of_angular_momentum
+        name: Conservation of Angular Momentum
+        prerequisites: [angular_momentum]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: couple
+        name: Couple
+        prerequisites: [torque]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: rolling_motion_pure_rolling
+        name: Rolling Motion (Pure Rolling)
+        prerequisites: [rotational_ke, conservation_of_mechanical_energy]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 14
+      - id: rolling_with_slipping
+        name: Rolling with Slipping
+        prerequisites: [rolling_motion_pure_rolling, kinetic_friction]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 14

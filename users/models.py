@@ -30,6 +30,25 @@ class GradeLevel(models.TextChoices):
     DROPPER = "DROPPER", "Dropper"
 
 
+class JourneyType(models.TextChoices):
+    FRESH_START = "fresh_start", "Fresh Start"
+    MID_JOURNEY = "mid_journey", "Mid Journey"
+    REVISION_DROPPER = "revision_dropper", "Revision / Dropper"
+
+
+class LearningSource(models.TextChoices):
+    SCHOOL = "school", "School"
+    COACHING = "coaching", "Coaching"
+    SELF_STUDY = "self_study", "Self Study"
+    MIXED = "mixed", "Mixed"
+
+
+class PreferredDepth(models.TextChoices):
+    QUICK = "quick", "Quick"
+    STANDARD = "standard", "Standard"
+    DEEP = "deep", "Deep"
+
+
 class OAuthProvider(models.TextChoices):
     GOOGLE = "google", "Google"
     APPLE = "apple", "Apple"
@@ -137,6 +156,7 @@ class StudentProfile(models.Model):
     city = models.CharField(max_length=80, blank=True, default="")
     state = models.CharField(max_length=80, blank=True, default="")
     daily_goal_minutes = models.SmallIntegerField(default=30)
+    preferred_depth = models.CharField(max_length=20, choices=PreferredDepth.choices, default=PreferredDepth.STANDARD)
     onboarding_completed = models.BooleanField(default=False)
     onboarding_step = models.SmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -163,6 +183,36 @@ class UserPreferences(models.Model):
 
     def __str__(self):
         return f"{self.user_id}:preferences"
+
+
+class SyllabusPlacement(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name="syllabus_placement")
+    journey_type = models.CharField(max_length=24, choices=JourneyType.choices, default=JourneyType.FRESH_START)
+    learning_source = models.CharField(max_length=20, choices=LearningSource.choices, default=LearningSource.MIXED)
+    covered_chapters = models.JSONField(default=list, blank=True)
+    self_assessed_coverage = models.JSONField(default=dict, blank=True)
+    diagnostic_baseline = models.JSONField(default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "syllabus_placement"
+
+    def __str__(self):
+        return f"{self.user_id}:{self.journey_type}"
+
+
+class OnboardingSession(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name="onboarding_session")
+    current_step = models.SmallIntegerField(default=1)
+    snapshot = models.JSONField(default=dict, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "onboarding_sessions"
+
+    def __str__(self):
+        return f"{self.user_id}:step_{self.current_step}"
 
 
 class Plan(models.Model):

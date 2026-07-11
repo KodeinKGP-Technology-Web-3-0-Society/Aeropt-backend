@@ -8,10 +8,15 @@ from users.views import (
     MeView,
     NotificationViewSet,
     OAuthAccountViewSet,
+    OnboardingChaptersView,
+    OnboardingCompleteView,
+    OnboardingPlacementPlanView,
+    OnboardingSessionViewSet,
     PlanViewSet,
     RegisterView,
     StudentProfileViewSet,
     SubscriptionViewSet,
+    SyllabusPlacementViewSet,
     TokenObtainPairViewAlias,
     TokenRefreshViewAlias,
     UserAchievementViewSet,
@@ -23,6 +28,8 @@ router = DefaultRouter()
 router.register(r"oauth-accounts", OAuthAccountViewSet, basename="oauth-account")
 router.register(r"auth-sessions", AuthSessionViewSet, basename="auth-session")
 router.register(r"student-profiles", StudentProfileViewSet, basename="student-profile")
+router.register(r"syllabus-placement", SyllabusPlacementViewSet, basename="syllabus-placement")
+router.register(r"onboarding-sessions", OnboardingSessionViewSet, basename="onboarding-session")
 router.register(r"preferences", UserPreferencesViewSet, basename="user-preferences")
 router.register(r"plans", PlanViewSet, basename="plan")
 router.register(r"subscriptions", SubscriptionViewSet, basename="subscription")
@@ -37,6 +44,12 @@ auth_urlpatterns = [
     path("token/refresh/", TokenRefreshViewAlias.as_view(), name="token-refresh"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("me/", MeView.as_view(), name="me"),
+]
+
+onboarding_urlpatterns = [
+    path("chapters/", OnboardingChaptersView.as_view(), name="onboarding-chapters"),
+    path("placement-plan/", OnboardingPlacementPlanView.as_view(), name="onboarding-placement-plan"),
+    path("complete/", OnboardingCompleteView.as_view(), name="onboarding-complete"),
 ]
 
 user_urlpatterns = router.urls
