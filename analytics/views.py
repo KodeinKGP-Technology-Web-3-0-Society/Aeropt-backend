@@ -6,6 +6,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import NotAuthenticated
 
 from analytics.supabase_dashboard import build_dashboard_from_supabase
+from analytics.supabase_progress import build_progress_from_supabase
+from users.models import SyllabusPlacement
 from users.supabase_sync import ensure_supabase_user, is_supabase_configured
 
 class _SessionMixin:
@@ -48,6 +50,35 @@ class DashboardView(APIView, _SessionMixin):
             return Response(payload)
         return Response(
             {"detail": "Supabase dashboard data is temporarily unavailable."},
+            status=503,
+        )
+
+
+class ProgressView(APIView, _SessionMixin):
+    permission_classes = (AllowAny if getattr(settings, "CHATBOT_AUTH_DISABLED", False) else IsAuthenticated,)
+
+    def get(self, request):
+        user = self._get_actor_user(request)
+        supabase_user_id = ensure_supabase_user(user)
+
+        if not is_supabase_configured():
+            return Response(
+                {"detail": "Supabase is not configured. Set SUPABASE_URL and SUPABASE_KEY in .env."},
+                status=503,
+            )
+        if not supabase_user_id:
+            return Response(
+                {"detail": "Could not link your account to Supabase. Sign out and sign in again."},
+                status=503,
+            )
+
+        placement = SyllabusPlacement.objects.filter(user=user).first()
+        payload = build_progress_from_supabase(supabase_user_id, placement=placement)
+        if payload is not None:
+            payload["source"] = "supabase"
+            return Response(payload)
+        return Response(
+            {"detail": "Supabase progress data is temporarily unavailable."},
             status=503,
         )
 

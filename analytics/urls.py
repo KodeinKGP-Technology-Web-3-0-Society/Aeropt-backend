@@ -13,6 +13,7 @@ from analytics.views import (
     LearningGapViewSet,
     PracticeAttemptViewSet,
     ProficiencySnapshotViewSet,
+    ProgressView,
     QuestionAttemptViewSet,
     RecommendationViewSet,
     StreakViewSet,
@@ -39,4 +40,5 @@ router.register(r"assessment-questions", AssessmentQuestionViewSet, basename="as
 
 urlpatterns = [
     path("dashboard/", DashboardView.as_view(), name="analytics-dashboard"),
+    path("progress/", ProgressView.as_view(), name="analytics-progress"),
 ] + router.urls
