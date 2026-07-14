@@ -128,11 +128,10 @@ def build_placement_plan(
         target_chapters = all_chapters[:FRESH_START_MAX_PROBES]
         skipped_chapters = all_chapters[FRESH_START_MAX_PROBES:]
     elif covered:
-        # mid_journey / revision_dropper with self-reported coverage — trust confidence ratings
-        target_chapters = []
-        skipped_chapters = list(covered) + [
-            ch for ch in all_chapters if ch not in set(covered)
-        ]
+        # mid_journey / revision_dropper with self-reported coverage
+        pool = _sort_chapters_by_depth(list(covered), depth_map)
+        target_chapters = pool[:REVISION_MAX_PROBES]
+        skipped_chapters = [ch for ch in all_chapters if ch not in target_chapters]
     elif journey_type == JourneyType.REVISION_DROPPER:
         pool = _sort_chapters_by_depth(all_chapters, depth_map)
         target_chapters = pool[:REVISION_MAX_PROBES]

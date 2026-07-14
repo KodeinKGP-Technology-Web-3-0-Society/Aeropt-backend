@@ -38,4 +38,6 @@ celerybeat.pid
 
 /bruno
 /scripts
-API_REFERENCE.md
+
+# Migrations
+roadmap/migrations/*
