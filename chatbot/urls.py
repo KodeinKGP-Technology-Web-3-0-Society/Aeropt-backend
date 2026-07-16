@@ -1,3 +1,11 @@
+"""
+LEGACY — Django chatbot URLs.
+
+Live Study Session (`/chat` in Aeropt-frontend) talks to Aeropt-agent (:8001)
+and Supabase `sessions` / `chat_turns`. Do not add product features here or
+point new clients at `/api/v1/chat/`. Kept mounted for older tooling only.
+"""
+
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 

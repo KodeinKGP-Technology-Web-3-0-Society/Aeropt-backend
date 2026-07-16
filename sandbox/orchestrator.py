@@ -48,7 +48,7 @@ def build_action_queue(user) -> List[Dict[str, Any]]:
         "revise": "REVISE",
         "mastered": "REVISE",
     }
-    primary_action = action_map.get(current.get("node_type", "learn"), "LEARN")
+    primary_action = action_map.get((current.get("node_type") or "learn").lower(), "LEARN")
 
     queue.append(
         {
@@ -76,7 +76,7 @@ def build_action_queue(user) -> List[Dict[str, Any]]:
                 queue.append(
                     {
                         "id": f"next-{node.id}",
-                        "action": "LEARN" if node.node_type == "learn" else "REVISE",
+                        "action": action_map.get((node.node_type or "learn").lower(), "LEARN"),
                         "concept_id": node.concept_id,
                         "concept_name": node.concept_name,
                         "chapter": node.chapter,

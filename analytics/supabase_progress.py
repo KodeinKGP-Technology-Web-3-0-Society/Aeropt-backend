@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from django.utils import timezone
 
-from analytics.supabase_dashboard import CHAPTER_ORDER, _score_to_percent
+from analytics.supabase_dashboard import CHAPTER_ORDER, _display_score_percent, _is_unexplored, _score_to_percent
 from users.models import SyllabusPlacement
 from users.supabase_sync import get_supabase_client, is_supabase_configured
 
@@ -127,11 +127,13 @@ def _chapter_series(
 
     scores: Dict[str, float] = {}
     for concept_id in concept_chapters:
-        if concept_id in baseline:
+        match = next((s for s in states if s.get("concept_id") == concept_id), None)
+        if match and not _is_unexplored(match):
+            scores[concept_id] = float(match.get("proficiency_score", 0.5))
+        elif concept_id in baseline:
             scores[concept_id] = baseline[concept_id]
         else:
-            match = next((s for s in states if s.get("concept_id") == concept_id), None)
-            scores[concept_id] = float(match.get("proficiency_score", 0.5)) if match else 0.5
+            scores[concept_id] = 0.0
 
     snapshots: Dict[datetime.date, Dict[str, float]] = {day: dict(scores) for day in day_list}
 
@@ -177,7 +179,7 @@ def _chapter_series(
         series: List[int] = []
         for day in day_list:
             day_scores = [
-                _score_to_percent(snapshots[day].get(cid, baseline.get(cid, 0.5)))
+                _score_to_percent(snapshots[day].get(cid, baseline.get(cid, 0.0)))
                 for cid in active_ids
             ]
             series.append(int(sum(day_scores) / len(day_scores)) if day_scores else 0)
@@ -298,7 +300,7 @@ def build_progress_from_supabase(
     for state in attempted_states:
         concept_id = state.get("concept_id", "")
         chapter = state.get("chapter") or concept_chapters.get(concept_id, "Physics")
-        score = _score_to_percent(state.get("proficiency_score", 0.5))
+        score = _display_score_percent(state)
         attempts_count = int(state.get("attempts") or 0)
         correct = int(state.get("correct") or 0)
         accuracy = int((correct / attempts_count) * 100) if attempts_count > 0 else 0

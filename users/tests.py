@@ -46,7 +46,7 @@ class PlacementSeedingTests(TestCase):
 
     def test_node_proficiency_display_not_started_for_fresh_start(self):
         pct, label = node_proficiency_display(0.5, "Laws of Motion", self.placement, is_cold_start=True)
-        self.assertIsNone(pct)
+        self.assertEqual(pct, 0)
         self.assertEqual(label, "not_started")
 
     def test_node_proficiency_display_shows_covered_chapter_score(self):

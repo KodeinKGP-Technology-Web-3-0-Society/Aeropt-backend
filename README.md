@@ -8,7 +8,8 @@ AI-powered JEE exam prep platform. Students study physics concepts through an LL
 Aeropt-backend/
 ├── prepwise/          # Django project config (settings, urls, wsgi, asgi)
 ├── users/             # Auth + student profiles
-├── chatbot/           # LLM study sessions + message history
+├── chatbot/           # LEGACY study-session models/APIs (unused by product /chat)
+├── roadmap/           # Learning paths + progress (active)
 ├── analytics/         # Dashboard + progress data
 ├── apis/              # DRF config hub + central router
 ├── requirements.txt
@@ -21,7 +22,8 @@ Aeropt-backend/
 | App | Responsibility |
 |-----|---------------|
 | `users` | Custom User model, StudentProfile (exam target, chapters), JWT auth |
-| `chatbot` | ChatSession, ChatMessage, ConceptSnapshot, direct Anthropic LLM connection |
+| `chatbot` | **LEGACY** — Django ChatSession/StudySession. Live Study Session uses **Aeropt-agent** (`:8001`) + Supabase. Do not extend for product `/chat`. |
+| `roadmap` | Learning paths, path nodes, progress — used by frontend roadmap + chat entry |
 | `analytics` | ConceptProficiency, StudyStreak, PracticeAttempt, dashboard/progress aggregation |
 | `apis` | DRF settings, central URL router, shared serializers/utils, health-check |
 
@@ -57,8 +59,11 @@ All endpoints are versioned under `/api/v1/`. See [.claude/API_PLAN.md](.claude/
 |--------|-----|
 | `/api/v1/auth/` | users — register, login, logout, token refresh |
 | `/api/v1/users/` | users — profile, chapters |
-| `/api/v1/chat/` | chatbot — sessions, messages, streaming |
+| `/api/v1/chat/` | chatbot — **LEGACY** (not used by product Study Session) |
+| `/api/v1/roadmap/` | roadmap — learning path + progress |
 | `/api/v1/analytics/` | analytics — dashboard, progress, concepts, streaks |
+
+Product chat traffic goes to **Aeropt-agent** on port **8001** (`/api/v1/chat/message`, sessions, end-session).
 
 ## Tech Stack
 

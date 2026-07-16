@@ -334,11 +334,15 @@ class OnboardingCompleteView(APIView):
 
         roadmap_summary = None
         try:
-            from roadmap.generator import generate_learning_path
+            from roadmap.generator import generate_learning_path, _read_concept_state_map
             from roadmap.serializers import LearningPathSerializer
 
             path = generate_learning_path(user, force=True)
-            roadmap_data = LearningPathSerializer(path).data
+            roadmap_ctx = {
+                "placement": getattr(user, "syllabus_placement", None),
+                "concept_states": _read_concept_state_map(user),
+            }
+            roadmap_data = LearningPathSerializer(path, context=roadmap_ctx).data
             roadmap_summary = {
                 "total_nodes": roadmap_data.get("total_nodes"),
                 "active_nodes": roadmap_data.get("active_nodes"),

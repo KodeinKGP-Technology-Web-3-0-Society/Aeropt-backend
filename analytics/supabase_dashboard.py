@@ -19,7 +19,20 @@ def _score_to_percent(proficiency_score: float) -> int:
     return max(0, min(100, int(round(float(proficiency_score) * 100))))
 
 
-def _concept_tag(score: int, flagged_weak: bool) -> Optional[str]:
+def _is_unexplored(state: Dict[str, Any]) -> bool:
+    """Concept not yet practiced — internal score may be 0.5 but UI should show 0%."""
+    return bool(state.get("is_cold_start")) or int(state.get("attempts") or 0) == 0
+
+
+def _display_score_percent(state: Dict[str, Any]) -> int:
+    if _is_unexplored(state):
+        return 0
+    return _score_to_percent(state.get("proficiency_score", 0.5))
+
+
+def _concept_tag(score: int, flagged_weak: bool, *, unexplored: bool = False) -> Optional[str]:
+    if unexplored:
+        return None
     if flagged_weak or score < 50:
         return "WEAK"
     if score >= 75:
@@ -99,13 +112,17 @@ def build_dashboard_from_supabase(supabase_user_id: str) -> Optional[Dict[str, A
 
     streak_info = _compute_streak(session_dates)
 
-    attempted = [s for s in states if int(s.get("attempts") or 0) > 0]
-    total_score = sum(_score_to_percent(s.get("proficiency_score", 0.5)) for s in states)
-    overall = int(total_score / len(states)) if states else 0
+    attempted = [s for s in states if not _is_unexplored(s)]
+    overall = (
+        int(sum(_display_score_percent(s) for s in attempted) / len(attempted))
+        if attempted
+        else 0
+    )
 
     weak_states = [
         s for s in states
-        if s.get("flagged_weak") or _score_to_percent(s.get("proficiency_score", 0.5)) < 50
+        if not _is_unexplored(s)
+        and (s.get("flagged_weak") or _display_score_percent(s) < 50)
     ]
     weak_list = [
         concept_names.get(s.get("concept_id"), s.get("concept_id", ""))
@@ -139,7 +156,8 @@ def build_dashboard_from_supabase(supabase_user_id: str) -> Optional[Dict[str, A
     for state in states:
         concept_id = state.get("concept_id", "")
         chapter = state.get("chapter") or concept_chapters.get(concept_id, "Physics")
-        score = _score_to_percent(state.get("proficiency_score", 0.5))
+        unexplored = _is_unexplored(state)
+        score = _display_score_percent(state)
         attempts = int(state.get("attempts") or 0)
         correct = int(state.get("correct") or 0)
         accuracy = int((correct / attempts) * 100) if attempts > 0 else 0
@@ -149,7 +167,8 @@ def build_dashboard_from_supabase(supabase_user_id: str) -> Optional[Dict[str, A
             "score": score,
             "attempts": attempts,
             "accuracy": accuracy,
-            "tag": _concept_tag(score, bool(state.get("flagged_weak"))),
+            "tag": _concept_tag(score, bool(state.get("flagged_weak")), unexplored=unexplored),
+            "not_started": unexplored,
         })
 
     ordered_chapters = [name for name in CHAPTER_ORDER if name in chapters_map]
@@ -158,11 +177,12 @@ def build_dashboard_from_supabase(supabase_user_id: str) -> Optional[Dict[str, A
     chapters_data = []
     for chapter_name in ordered_chapters:
         concepts_list = chapters_map[chapter_name]
-        ch_total = sum(c["score"] for c in concepts_list)
-        ch_count = len(concepts_list)
+        explored = [c for c in concepts_list if not c.get("not_started")]
+        ch_total = sum(c["score"] for c in explored)
+        ch_count = len(explored)
         chapters_data.append({
             "name": chapter_name,
-            "conceptCount": ch_count,
+            "conceptCount": len(concepts_list),
             "overallScore": int(ch_total / ch_count) if ch_count else 0,
             "concepts": concepts_list,
         })

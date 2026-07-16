@@ -15,7 +15,6 @@ from roadmap.serializers import (
     LearningPathSerializer,
     PathNodeSerializer,
     PathProgressUpdateSerializer,
-    RoadmapNextSerializer,
 )
 
 
@@ -27,19 +26,37 @@ def _roadmap_serializer_context(user):
     }
 
 
+_NO_SYLLABUS_MESSAGE = (
+    "We couldn't build your roadmap yet because the syllabus is unavailable. "
+    "Please try again shortly."
+)
+
+
 class RoadmapView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         regenerate = request.query_params.get("regenerate") == "1"
-        if regenerate:
-            path = generate_learning_path(request.user, force=True)
-        else:
-            path = get_or_generate_learning_path(request.user)
+        try:
+            if regenerate:
+                path = generate_learning_path(request.user, force=True)
+            else:
+                path = get_or_generate_learning_path(request.user)
+        except ValueError:
+            return Response(
+                {"detail": _NO_SYLLABUS_MESSAGE},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         return Response(LearningPathSerializer(path, context=_roadmap_serializer_context(request.user)).data)
 
     def post(self, request):
-        path = generate_learning_path(request.user, force=True)
+        try:
+            path = generate_learning_path(request.user, force=True)
+        except ValueError:
+            return Response(
+                {"detail": _NO_SYLLABUS_MESSAGE},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         return Response(
             LearningPathSerializer(path, context=_roadmap_serializer_context(request.user)).data,
             status=status.HTTP_201_CREATED,
@@ -50,7 +67,13 @@ class RoadmapNextView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        path = get_or_generate_learning_path(request.user)
+        try:
+            path = get_or_generate_learning_path(request.user)
+        except ValueError:
+            return Response(
+                {"detail": _NO_SYLLABUS_MESSAGE},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         nodes = get_next_nodes(path, limit=3)
         ctx = _roadmap_serializer_context(request.user)
         return Response({"nodes": PathNodeSerializer(nodes, many=True, context=ctx).data})

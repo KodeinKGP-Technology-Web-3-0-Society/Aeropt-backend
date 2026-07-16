@@ -1,29 +1,18 @@
 """
-APP: chatbot
-============
-Powers the Study Session page — the core LLM-driven tutoring interface.
+APP: chatbot (LEGACY)
+=====================
+Deprecated for product Study Session. Live `/chat` uses Aeropt-agent (:8001)
++ Supabase `public.sessions` / `chat_turns` (+ `presentation` jsonb). Django
+`roadmap/` remains the source of truth for learning-path progress.
 
-This app manages a DIRECT connection to an LLM provider (Anthropic Claude
-recommended — strong at physics reasoning + supports structured JSON output via
-tool_use). It stores every session and every message so that:
-  - Users can resume a past session with full history intact.
-  - The right-panel "Concepts in this response" UI is populated from structured
-    LLM output (concept names + proficiency bars + trend arrows).
-  - The "Prerequisite chain" shows concept dependencies for each exchange.
-  - The analytics app can mine which concepts appeared in each exchange.
+Do not expand these models/APIs for the Study Session UI. Prefer agent +
+frontend contracts documented in docs/STUDY_SESSION_FIX_PLAN.md.
 
-From the Figma Study Session screen:
-  - User types a physics question; KaTeX math is supported ($F = ma$).
-  - LLM reply contains:
-      • FILLING A GAP FIRST — prerequisite bridge before the solution
-      • Numbered SOLUTION steps
-      • Highlighted INSIGHT callout box
-      • "Try next —" follow-up suggestion chips
-  - Right panel: concept name, proficiency bar (%), trend arrow (↑/↓).
-  - Prerequisite chain: ordered list of concepts with health-color dots.
+Historical intent (original tables below) is retained for migration/context
+only — ChatSession / StudySession are not written by ChatWorkspace.
 
-TABLES PLANNED
---------------
+TABLES (legacy)
+---------------
 1. ChatSession
    - user               : FK → users.User
    - title              : CharField — auto-generated from first message

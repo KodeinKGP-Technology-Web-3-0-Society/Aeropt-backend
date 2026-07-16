@@ -30,13 +30,17 @@ def compute_readiness(user) -> Dict[str, Any]:
             rows = res.data or []
             concepts_tracked = len(rows)
             if rows:
-                scores = [float(r.get("proficiency_score", 0.5)) for r in rows]
-                concept_mastery = round(sum(scores) / len(scores) * 100)
-                weak_count = sum(1 for r in rows if r.get("flagged_weak"))
-                cold_count = sum(1 for r in rows if r.get("is_cold_start"))
-                prerequisite_health = max(0, 100 - round((weak_count / len(rows)) * 100))
-                if cold_count:
-                    prerequisite_health = max(0, prerequisite_health - min(20, cold_count * 2))
+                explored = [r for r in rows if not r.get("is_cold_start")]
+                if explored:
+                    scores = [float(r.get("proficiency_score", 0.5)) for r in explored]
+                    concept_mastery = round(sum(scores) / len(scores) * 100)
+                weak_count = sum(
+                    1 for r in rows if not r.get("is_cold_start") and r.get("flagged_weak")
+                )
+                weak_denominator = len(explored) if explored else len(rows)
+                prerequisite_health = max(
+                    0, 100 - round((weak_count / weak_denominator) * 100)
+                ) if weak_denominator else 50
 
     try:
         from roadmap.generator import get_active_learning_path

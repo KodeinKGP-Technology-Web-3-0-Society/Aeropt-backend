@@ -27,7 +27,7 @@ def node_proficiency_display(
 ) -> tuple[Optional[int], str]:
     """
     Return (display_pct or None, label) for UI surfaces.
-    Internal agent score may remain 0.5 for cold-start concepts.
+    Internal agent score may remain 0.5 for cold-start concepts; UI shows 0%.
     """
     if status == "skipped" and node_type == "MASTERED":
         return round(proficiency_score * 100), "mastered"
@@ -47,10 +47,10 @@ def node_proficiency_display(
         if journey == JourneyType.MID_JOURNEY and chapter in covered:
             pass
         else:
-            return None, "not_started"
+            return 0, "not_started"
 
     if journey == JourneyType.MID_JOURNEY and chapter not in covered:
-        return None, "not_started"
+        return 0, "not_started"
 
     pct = round(proficiency_score * 100)
     if proficiency_score >= 0.6:

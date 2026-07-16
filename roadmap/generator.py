@@ -24,6 +24,25 @@ def _read_live_concepts() -> List[Dict[str, Any]]:
     return res.data or []
 
 
+def _syllabus_concepts_fallback() -> List[Dict[str, Any]]:
+    """Build concept rows from the canonical syllabus spec.
+
+    Used when Supabase `concepts` is empty/unreachable so the roadmap can still
+    be generated from the YAML source of truth instead of failing hard.
+    """
+    rows: List[Dict[str, Any]] = []
+    for concept_id, spec in syllabus_concept_map().items():
+        rows.append(
+            {
+                "concept_id": concept_id,
+                "concept_name": spec.get("name") or concept_id,
+                "chapter": spec.get("chapter") or "Physics",
+                "subject": spec.get("subject") or "Physics",
+            }
+        )
+    return rows
+
+
 def _read_concept_state_map(user) -> Dict[str, Dict[str, Any]]:
     if not is_supabase_configured() or not user.supabase_user_id:
         return {}
@@ -194,6 +213,10 @@ def generate_learning_path(user, *, subject: str = "Physics", force: bool = Fals
         existing.save(update_fields=["is_active", "updated_at"])
 
     live_rows = _read_live_concepts()
+    if not live_rows:
+        # Supabase concepts empty/unreachable — fall back to the canonical
+        # syllabus spec so the student still gets a roadmap.
+        live_rows = _syllabus_concepts_fallback()
     if not live_rows:
         raise ValueError("No concepts available to build a roadmap.")
 

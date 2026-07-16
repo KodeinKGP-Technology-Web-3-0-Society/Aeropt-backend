@@ -27,6 +27,7 @@ urlpatterns = [
     path("auth/", include((auth_urlpatterns, "users"), namespace="auth")),
     path("onboarding/", include((onboarding_urlpatterns, "users"), namespace="onboarding")),
     path("users/", include((user_urlpatterns, "users"), namespace="users")),
+    # LEGACY: Django chatbot — unused by product Study Session (agent :8001).
     path("chat/", include("chatbot.urls")),
     path("analytics/", include("analytics.urls")),
     path("roadmap/", include("roadmap.urls")),
