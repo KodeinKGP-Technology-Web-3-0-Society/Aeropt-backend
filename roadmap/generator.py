@@ -178,7 +178,7 @@ def _merge_concepts(live_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 "prerequisites": spec.get("prerequisites") or [],
                 "exam_weight": spec.get("exam_weight", "medium"),
                 "content_sequence": spec.get("content_sequence", ["theory", "example", "practice", "pyq"]),
-                "mastery_threshold": spec.get("mastery_threshold", 75),
+                "mastery_threshold": spec.get("mastery_threshold", 80),
                 "estimated_minutes": spec.get("estimated_minutes", 12),
             }
         )

@@ -102,3 +102,10 @@ def on_concept_mentioned(sender, user, concepts_data, **kwargs):
     
     streak.last_study_date = today
     streak.save()
+
+    try:
+        from apis.cache_layer import invalidate_user_reads
+
+        invalidate_user_reads(user)
+    except Exception:
+        pass

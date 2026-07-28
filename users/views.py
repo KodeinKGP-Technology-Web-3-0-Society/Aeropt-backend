@@ -31,6 +31,12 @@ from users.supabase_sync import (
     seed_user_concept_state_from_placement,
     sync_profile_to_supabase,
 )
+from apis.cache_layer import (
+    TTL_CHAPTERS,
+    chapters_key,
+    get_or_set,
+    invalidate_user_reads,
+)
 
 logger = logging.getLogger(__name__)
 from users.serializers import (
@@ -251,7 +257,7 @@ class OnboardingChaptersView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        chapters = get_physics_chapters_metadata()
+        chapters = get_or_set(chapters_key(), TTL_CHAPTERS, get_physics_chapters_metadata)
         return Response({"chapters": chapters})
 
 
@@ -312,7 +318,7 @@ class OnboardingCompleteView(APIView):
             session.current_step = body["current_step"]
 
         profile.onboarding_completed = True
-        profile.onboarding_step = body.get("onboarding_step", 8)
+        profile.onboarding_step = body.get("onboarding_step", 7)
         session.completed_at = django_timezone.now()
 
         profile.save()
@@ -331,6 +337,8 @@ class OnboardingCompleteView(APIView):
                 "first_up": "your first concept",
                 "journey_type": placement.journey_type,
             }
+
+        invalidate_user_reads(user)
 
         roadmap_summary = None
         try:

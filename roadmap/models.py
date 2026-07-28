@@ -56,7 +56,7 @@ class PathNode(models.Model):
     node_type = models.CharField(max_length=20, choices=NodeType.choices, default=NodeType.LEARN)
     exam_weight = models.CharField(max_length=10, choices=ExamWeight.choices, default=ExamWeight.MEDIUM)
     content_sequence = models.JSONField(default=list, blank=True)
-    mastery_threshold = models.SmallIntegerField(default=75)
+    mastery_threshold = models.SmallIntegerField(default=80)
     estimated_minutes = models.SmallIntegerField(default=12)
     proficiency_pct = models.SmallIntegerField(default=50)
     status = models.CharField(max_length=20, choices=NodeStatus.choices, default=NodeStatus.PENDING)

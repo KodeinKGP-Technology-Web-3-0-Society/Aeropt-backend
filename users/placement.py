@@ -9,6 +9,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from users.models import JourneyType, SyllabusPlacement
 
+# Display bands (meeting Jul 17 — mastery at 0.8). Agent weak/clear flags unchanged (0.4 / 0.65).
+MASTERY_THRESHOLD = 0.8
+ALMOST_MASTERED_THRESHOLD = 0.65
+WEAK_DISPLAY_THRESHOLD = 0.4
+
 _DEPTH_SCORES = {
     "strong": 0.65,
     "moderate": 0.45,
@@ -34,9 +39,11 @@ def node_proficiency_display(
 
     if status == "completed":
         pct = round(proficiency_score * 100)
-        if proficiency_score >= 0.6:
+        if proficiency_score >= MASTERY_THRESHOLD:
             return pct, "strong"
-        if proficiency_score >= 0.4:
+        if proficiency_score >= ALMOST_MASTERED_THRESHOLD:
+            return pct, "almost_mastered"
+        if proficiency_score >= WEAK_DISPLAY_THRESHOLD:
             return pct, "moderate"
         return pct, "weak"
 
@@ -53,9 +60,11 @@ def node_proficiency_display(
         return 0, "not_started"
 
     pct = round(proficiency_score * 100)
-    if proficiency_score >= 0.6:
+    if proficiency_score >= MASTERY_THRESHOLD:
         return pct, "strong"
-    if proficiency_score >= 0.4:
+    if proficiency_score >= ALMOST_MASTERED_THRESHOLD:
+        return pct, "almost_mastered"
+    if proficiency_score >= WEAK_DISPLAY_THRESHOLD:
         return pct, "moderate"
     return pct, "weak"
 
@@ -73,9 +82,11 @@ def _chapter_label(score: float, probed: bool, *, is_not_started: bool = False) 
         return "not_started"
     if not probed:
         return "not_started"
-    if score >= 0.6:
+    if score >= MASTERY_THRESHOLD:
         return "strong"
-    if score >= 0.4:
+    if score >= ALMOST_MASTERED_THRESHOLD:
+        return "almost_mastered"
+    if score >= WEAK_DISPLAY_THRESHOLD:
         return "moderate"
     return "weak"
 

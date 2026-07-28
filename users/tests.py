@@ -1,6 +1,8 @@
 from django.test import TestCase
+from rest_framework import status
+from rest_framework.test import APITestCase
 
-from users.models import JourneyType, StudentProfile, SyllabusPlacement, User
+from users.models import JourneyType, OnboardingSession, StudentProfile, SyllabusPlacement, User
 from users.placement import build_concept_state_rows, node_proficiency_display
 
 
@@ -60,3 +62,78 @@ class PlacementSeedingTests(TestCase):
         )
         self.assertEqual(pct, 65)
         self.assertEqual(label, "strong")
+
+
+class OnboardingMilestoneApiTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="onboard@example.com",
+            password="testpass123",
+            full_name="Onboard Student",
+        )
+        self.client.force_authenticate(self.user)
+        self.profile = StudentProfile.objects.get(user=self.user)
+        self.placement = SyllabusPlacement.objects.get(user=self.user)
+        self.session = OnboardingSession.objects.get(user=self.user)
+
+    def test_patch_onboarding_session_advances_step_and_snapshot(self):
+        url = f"/api/v1/users/onboarding-sessions/{self.user.id}/"
+        payload = {
+            "current_step": 3,
+            "snapshot": {
+                "journey_type": "mid_journey",
+                "target_exam": "JEE_MAINS",
+                "current_step": 3,
+            },
+        }
+        res = self.client.patch(url, payload, format="json")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.session.refresh_from_db()
+        self.assertEqual(self.session.current_step, 3)
+        self.assertEqual(self.session.snapshot.get("target_exam"), "JEE_MAINS")
+
+    def test_patch_profile_rhythm_fields(self):
+        url = f"/api/v1/users/student-profiles/{self.user.id}/"
+        res = self.client.patch(
+            url,
+            {"daily_goal_minutes": 90, "preferred_depth": "deep", "onboarding_step": 5},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.daily_goal_minutes, 90)
+        self.assertEqual(self.profile.preferred_depth, "deep")
+        self.assertEqual(self.profile.onboarding_step, 5)
+
+    def test_complete_marks_onboarding_done(self):
+        url = "/api/v1/onboarding/complete/"
+        res = self.client.post(
+            url,
+            {
+                "profile": {
+                    "target_exam": "BOTH",
+                    "target_year": 2027,
+                    "grade_level": "CLASS_12",
+                    "daily_goal_minutes": 45,
+                    "preferred_depth": "standard",
+                    "onboarding_step": 7,
+                },
+                "placement": {
+                    "journey_type": "fresh_start",
+                    "covered_chapters": [],
+                    "self_assessed_coverage": {},
+                    "diagnostic_baseline": {},
+                },
+                "snapshot": {"current_step": 7},
+                "current_step": 7,
+                "onboarding_step": 7,
+            },
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertTrue(res.data.get("ok"))
+        self.profile.refresh_from_db()
+        self.session.refresh_from_db()
+        self.assertTrue(self.profile.onboarding_completed)
+        self.assertEqual(self.profile.onboarding_step, 7)
+        self.assertIsNotNone(self.session.completed_at)

@@ -19,13 +19,62 @@ def _score_to_percent(proficiency_score: float) -> int:
     return max(0, min(100, int(round(float(proficiency_score) * 100))))
 
 
-def _is_unexplored(state: Dict[str, Any]) -> bool:
-    """Concept not yet practiced — internal score may be 0.5 but UI should show 0%."""
-    return bool(state.get("is_cold_start")) or int(state.get("attempts") or 0) == 0
+def _is_unexplored(
+    state: Dict[str, Any],
+    chapter: str,
+    placement = None,
+) -> bool:
+    """
+    Concept is unexplored if user never claimed knowledge and hasn't practiced.
+    
+    Show proficiency (explored) if:
+    - User practiced (attempts > 0)
+    - User marked chapter as covered in onboarding self-assessment
+    - User answered diagnostic question for this concept
+    
+    Hide proficiency (unexplored) if:
+    - Fresh start journey (is_cold_start: true)
+    - Chapter not in self-assessed coverage
+    - No diagnostic data and no practice attempts
+    """
+    # Always show if user has practiced
+    if int(state.get("attempts") or 0) > 0:
+        return False
+
+    # Diagnostic-tested concepts show their score even on fresh start
+    if placement is not None:
+        baseline = placement.diagnostic_baseline or {}
+        concept_scores = baseline.get("concept_scores") or {}
+        if state.get("concept_id") in concept_scores:
+            return False
+
+    # Hide cold-start placeholders (fresh / uncovered chapters)
+    if bool(state.get("is_cold_start")):
+        return True
+
+    if placement is None:
+        return False
+
+    from users.models import JourneyType
+
+    journey = getattr(placement, "journey_type", None)
+    if journey == JourneyType.FRESH_START:
+        return True
+
+    # Mid-journey: show if chapter was marked as covered
+    if journey == JourneyType.MID_JOURNEY:
+        covered = set(placement.covered_chapters or [])
+        return chapter not in covered
+
+    # Revision/Dropper: user claimed overall knowledge
+    if journey == JourneyType.REVISION_DROPPER:
+        return False
+
+    return False
 
 
-def _display_score_percent(state: Dict[str, Any]) -> int:
-    if _is_unexplored(state):
+def _display_score_percent(state: Dict[str, Any], chapter: str = "", placement = None) -> int:
+    if _is_unexplored(state, chapter, placement):
         return 0
     return _score_to_percent(state.get("proficiency_score", 0.5))
 
@@ -73,7 +122,10 @@ def _compute_streak(session_dates: List[datetime.date]) -> Dict[str, Any]:
     return {"current_streak": current, "dots": dots}
 
 
-def build_dashboard_from_supabase(supabase_user_id: str) -> Optional[Dict[str, Any]]:
+def build_dashboard_from_supabase(
+    supabase_user_id: str,
+    placement = None,
+) -> Optional[Dict[str, Any]]:
     if not is_supabase_configured():
         return None
 
@@ -112,17 +164,23 @@ def build_dashboard_from_supabase(supabase_user_id: str) -> Optional[Dict[str, A
 
     streak_info = _compute_streak(session_dates)
 
-    attempted = [s for s in states if not _is_unexplored(s)]
+    measured = [
+        s for s in states
+        if not _is_unexplored(s, concept_chapters.get(s.get("concept_id"), ""), placement)
+    ]
     overall = (
-        int(sum(_display_score_percent(s) for s in attempted) / len(attempted))
-        if attempted
+        int(sum(
+            _display_score_percent(s, concept_chapters.get(s.get("concept_id"), ""), placement)
+            for s in measured
+        ) / len(measured))
+        if measured
         else 0
     )
 
     weak_states = [
         s for s in states
-        if not _is_unexplored(s)
-        and (s.get("flagged_weak") or _display_score_percent(s) < 50)
+        if not _is_unexplored(s, concept_chapters.get(s.get("concept_id"), ""), placement)
+        and (s.get("flagged_weak") or _display_score_percent(s, concept_chapters.get(s.get("concept_id"), ""), placement) < 50)
     ]
     weak_list = [
         concept_names.get(s.get("concept_id"), s.get("concept_id", ""))
@@ -134,7 +192,7 @@ def build_dashboard_from_supabase(supabase_user_id: str) -> Optional[Dict[str, A
             "id": "proficiency",
             "label": "Overall Proficiency",
             "value": f"{overall}%",
-            "subtext": f"across {len(attempted)} attempted concepts",
+            "subtext": f"across {len(measured)} measured concepts",
         },
         {
             "id": "weak_concepts",
@@ -156,8 +214,8 @@ def build_dashboard_from_supabase(supabase_user_id: str) -> Optional[Dict[str, A
     for state in states:
         concept_id = state.get("concept_id", "")
         chapter = state.get("chapter") or concept_chapters.get(concept_id, "Physics")
-        unexplored = _is_unexplored(state)
-        score = _display_score_percent(state)
+        unexplored = _is_unexplored(state, chapter, placement)
+        score = _display_score_percent(state, chapter, placement)
         attempts = int(state.get("attempts") or 0)
         correct = int(state.get("correct") or 0)
         accuracy = int((correct / attempts) * 100) if attempts > 0 else 0

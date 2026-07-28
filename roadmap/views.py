@@ -16,6 +16,13 @@ from roadmap.serializers import (
     PathNodeSerializer,
     PathProgressUpdateSerializer,
 )
+from apis.cache_layer import (
+    TTL_ROADMAP,
+    get_or_set,
+    invalidate_roadmap,
+    invalidate_user_reads,
+    roadmap_key,
+)
 
 
 def _roadmap_serializer_context(user):
@@ -40,18 +47,37 @@ class RoadmapView(APIView):
         try:
             if regenerate:
                 path = generate_learning_path(request.user, force=True)
-            else:
+                invalidate_roadmap(request.user)
+
+                def _fresh():
+                    return LearningPathSerializer(
+                        path, context=_roadmap_serializer_context(request.user)
+                    ).data
+
+                payload = _fresh()
+                from django.core.cache import cache
+
+                cache.set(roadmap_key(request.user), payload, TTL_ROADMAP)
+                return Response(payload)
+
+            def _build():
                 path = get_or_generate_learning_path(request.user)
+                return LearningPathSerializer(
+                    path, context=_roadmap_serializer_context(request.user)
+                ).data
+
+            payload = get_or_set(roadmap_key(request.user), TTL_ROADMAP, _build)
+            return Response(payload)
         except ValueError:
             return Response(
                 {"detail": _NO_SYLLABUS_MESSAGE},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
-        return Response(LearningPathSerializer(path, context=_roadmap_serializer_context(request.user)).data)
 
     def post(self, request):
         try:
             path = generate_learning_path(request.user, force=True)
+            invalidate_user_reads(request.user)
         except ValueError:
             return Response(
                 {"detail": _NO_SYLLABUS_MESSAGE},
@@ -146,6 +172,8 @@ class RoadmapProgressView(APIView):
             status=node.status,
             proficiency_pct=node.proficiency_pct,
         )
+
+        invalidate_user_reads(request.user)
 
         path = LearningPath.objects.prefetch_related("nodes").get(id=node.learning_path_id)
         ctx = _roadmap_serializer_context(request.user)

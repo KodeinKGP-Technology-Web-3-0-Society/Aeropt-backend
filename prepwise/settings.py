@@ -172,6 +172,16 @@ def _build_database_config():
 DATABASES = {"default": _build_database_config()}
 DB_SCHEMA = os.getenv("DB_SCHEMA", "django").strip() or "django"
 
+# In-process cache for hot API reads (dashboard / roadmap / queue). No Redis.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "prepwise-api-cache",
+        "TIMEOUT": 120,
+        "OPTIONS": {"MAX_ENTRIES": 2000},
+    }
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

@@ -7,6 +7,13 @@ from rest_framework.exceptions import NotAuthenticated
 
 from analytics.supabase_dashboard import build_dashboard_from_supabase
 from analytics.supabase_progress import build_progress_from_supabase
+from apis.cache_layer import (
+    TTL_DASHBOARD,
+    TTL_PROGRESS,
+    dashboard_key,
+    get_or_set,
+    progress_key,
+)
 from users.models import SyllabusPlacement
 from users.supabase_sync import ensure_supabase_user, is_supabase_configured
 
@@ -44,9 +51,19 @@ class DashboardView(APIView, _SessionMixin):
                 {"detail": "Could not link your account to Supabase. Sign out and sign in again."},
                 status=503,
             )
-        payload = build_dashboard_from_supabase(supabase_user_id)
-        if payload is not None:
+
+        placement = getattr(user, "syllabus_placement", None)
+
+        def _build():
+            payload = build_dashboard_from_supabase(supabase_user_id, placement=placement)
+            if payload is None:
+                return None
+            payload = dict(payload)
             payload["source"] = "supabase"
+            return payload
+
+        payload = get_or_set(dashboard_key(user), TTL_DASHBOARD, _build)
+        if payload is not None:
             return Response(payload)
         return Response(
             {"detail": "Supabase dashboard data is temporarily unavailable."},
@@ -73,9 +90,17 @@ class ProgressView(APIView, _SessionMixin):
             )
 
         placement = SyllabusPlacement.objects.filter(user=user).first()
-        payload = build_progress_from_supabase(supabase_user_id, placement=placement)
-        if payload is not None:
+
+        def _build():
+            payload = build_progress_from_supabase(supabase_user_id, placement=placement)
+            if payload is None:
+                return None
+            payload = dict(payload)
             payload["source"] = "supabase"
+            return payload
+
+        payload = get_or_set(progress_key(user), TTL_PROGRESS, _build)
+        if payload is not None:
             return Response(payload)
         return Response(
             {"detail": "Supabase progress data is temporarily unavailable."},

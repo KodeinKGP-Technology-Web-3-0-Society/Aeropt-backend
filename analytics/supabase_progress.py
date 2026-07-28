@@ -114,6 +114,7 @@ def _chapter_series(
     concept_chapters: Dict[str, str],
     baseline: Dict[str, float],
     states: List[Dict[str, Any]],
+    placement: Optional[SyllabusPlacement] = None,
     days: int = PROGRESS_DAYS,
 ) -> Dict[str, Any]:
     today = timezone.now().date()
@@ -128,7 +129,8 @@ def _chapter_series(
     scores: Dict[str, float] = {}
     for concept_id in concept_chapters:
         match = next((s for s in states if s.get("concept_id") == concept_id), None)
-        if match and not _is_unexplored(match):
+        chapter = concept_chapters.get(concept_id, "")
+        if match and not _is_unexplored(match, chapter, placement):
             scores[concept_id] = float(match.get("proficiency_score", 0.5))
         elif concept_id in baseline:
             scores[concept_id] = baseline[concept_id]
@@ -294,13 +296,14 @@ def build_progress_from_supabase(
         concept_chapters=concept_chapters,
         baseline=baseline,
         states=states,
+        placement=placement,
     )
 
     concept_rows = []
     for state in attempted_states:
         concept_id = state.get("concept_id", "")
         chapter = state.get("chapter") or concept_chapters.get(concept_id, "Physics")
-        score = _display_score_percent(state)
+        score = _display_score_percent(state, chapter, placement)
         attempts_count = int(state.get("attempts") or 0)
         correct = int(state.get("correct") or 0)
         accuracy = int((correct / attempts_count) * 100) if attempts_count > 0 else 0
