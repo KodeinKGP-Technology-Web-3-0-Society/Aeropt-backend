@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 def _roadmap_current(user) -> Optional[Dict[str, Any]]:
@@ -29,6 +32,7 @@ def _roadmap_current(user) -> Optional[Dict[str, Any]]:
             "proficiency_pct": node.proficiency_pct,
         }
     except Exception:
+        logger.exception("Failed to retrieve current roadmap position for user %s", getattr(user, "pk", user))
         return None
 
 
@@ -144,7 +148,7 @@ def build_action_queue(user) -> List[Dict[str, Any]]:
                     }
                 )
     except Exception:
-        pass
+        logger.exception("Failed to retrieve next roadmap nodes for user %s", getattr(user, "pk", user))
 
     return _pack_queue_to_goal(queue, daily_goal)
 
