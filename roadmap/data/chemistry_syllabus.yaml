@@ -221,3 +221,720 @@ chapters:
         content_sequence: [theory, example, practice, pyq]
         mastery_threshold: 75
         estimated_minutes: 12
+
+  - name: Periodic Table & Periodicity
+    order: 4
+    concepts:
+      - id: modern_periodic_law_and_classification
+        name: "Modern Periodic Law and Classification"
+        prerequisites: [aufbau_principle_and_electronic_configuration]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: atomic_and_ionic_radii
+        name: "Atomic and Ionic Radii"
+        prerequisites: [modern_periodic_law_and_classification]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: ionisation_enthalpy
+        name: "Ionisation Enthalpy"
+        prerequisites: [atomic_and_ionic_radii]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: electron_gain_enthalpy
+        name: "Electron Gain Enthalpy"
+        prerequisites: [ionisation_enthalpy]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: electronegativity
+        name: "Electronegativity"
+        prerequisites: [electron_gain_enthalpy]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: periodic_trends_in_properties
+        name: "Periodic Trends in Physical and Chemical Properties"
+        prerequisites: [electronegativity]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: diagonal_relationship_and_anomalies
+        name: "Diagonal Relationship and Anomalous Behaviour"
+        prerequisites: [periodic_trends_in_properties]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: States of Matter
+    order: 5
+    concepts:
+      - id: gas_laws_boyle_charles
+        name: "Gas Laws (Boyle's, Charles's, Gay-Lussac's)"
+        prerequisites: [mole_concept_avogadro_number]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: ideal_gas_equation_chem
+        name: "Ideal Gas Equation and Dalton's Law"
+        prerequisites: [gas_laws_boyle_charles]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: kinetic_molecular_theory
+        name: "Kinetic Molecular Theory of Gases"
+        prerequisites: [ideal_gas_equation_chem]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: molecular_speeds_maxwell_distribution
+        name: "Molecular Speeds and Maxwell Distribution"
+        prerequisites: [kinetic_molecular_theory]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: real_gases_and_van_der_waals
+        name: "Real Gases and the van der Waals Equation"
+        prerequisites: [kinetic_molecular_theory]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: liquefaction_and_critical_constants
+        name: "Liquefaction and Critical Constants"
+        prerequisites: [real_gases_and_van_der_waals]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: surface_tension_and_viscosity
+        name: "Surface Tension and Viscosity"
+        prerequisites: [liquefaction_and_critical_constants]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: Chemical Thermodynamics
+    order: 6
+    concepts:
+      - id: system_surroundings_state_functions
+        name: "System, Surroundings and State Functions"
+        prerequisites: []
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: internal_energy_and_enthalpy
+        name: "Internal Energy and Enthalpy"
+        prerequisites: [system_surroundings_state_functions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: first_law_thermo_chem
+        name: "First Law of Thermodynamics (Chemical)"
+        prerequisites: [internal_energy_and_enthalpy]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: heat_capacity_and_calorimetry
+        name: "Heat Capacity and Calorimetry"
+        prerequisites: [first_law_thermo_chem]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: hess_law_and_enthalpy_of_reaction
+        name: "Hess's Law and Enthalpies of Reaction"
+        prerequisites: [heat_capacity_and_calorimetry]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: bond_enthalpy_and_lattice_enthalpy
+        name: "Bond Enthalpy and Lattice Enthalpy"
+        prerequisites: [hess_law_and_enthalpy_of_reaction]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: entropy_and_spontaneity
+        name: "Entropy and Spontaneity"
+        prerequisites: [first_law_thermo_chem]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: gibbs_free_energy
+        name: "Gibbs Free Energy and Equilibrium"
+        prerequisites: [entropy_and_spontaneity]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+
+  - name: Chemical & Ionic Equilibrium
+    order: 7
+    concepts:
+      - id: reversible_reactions_and_equilibrium_state
+        name: "Reversible Reactions and the Equilibrium State"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: equilibrium_constant_kc_kp
+        name: "Equilibrium Constant (Kc and Kp)"
+        prerequisites: [reversible_reactions_and_equilibrium_state]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: le_chateliers_principle
+        name: "Le Chatelier's Principle"
+        prerequisites: [equilibrium_constant_kc_kp]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: acids_bases_concepts
+        name: "Acid-Base Concepts (Arrhenius, Bronsted, Lewis)"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: ph_and_ionic_product_of_water
+        name: "pH and the Ionic Product of Water"
+        prerequisites: [acids_bases_concepts]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: ionisation_of_weak_acids_and_bases
+        name: "Ionisation of Weak Acids and Bases"
+        prerequisites: [ph_and_ionic_product_of_water]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: buffer_solutions
+        name: "Buffer Solutions"
+        prerequisites: [ionisation_of_weak_acids_and_bases]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: salt_hydrolysis
+        name: "Salt Hydrolysis"
+        prerequisites: [ionisation_of_weak_acids_and_bases]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: solubility_product_and_common_ion_effect
+        name: "Solubility Product and the Common Ion Effect"
+        prerequisites: [ph_and_ionic_product_of_water]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+
+  - name: Redox Reactions & Electrochemistry
+    order: 8
+    concepts:
+      - id: oxidation_number_and_redox_balancing
+        name: "Oxidation Number and Balancing Redox Reactions"
+        prerequisites: [equivalent_concept_in_redox_and_acid_base]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: electrochemical_cells
+        name: "Electrochemical Cells (Galvanic)"
+        prerequisites: [oxidation_number_and_redox_balancing]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: standard_electrode_potential
+        name: "Standard Electrode Potential and the EMF Series"
+        prerequisites: [electrochemical_cells]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: nernst_equation
+        name: "Nernst Equation"
+        prerequisites: [standard_electrode_potential]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: gibbs_energy_and_cell_potential
+        name: "Gibbs Energy and Cell Potential"
+        prerequisites: [nernst_equation, gibbs_free_energy]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: conductance_and_kohlrausch_law
+        name: "Conductance and Kohlrausch's Law"
+        prerequisites: [electrochemical_cells]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: electrolysis_and_faradays_laws
+        name: "Electrolysis and Faraday's Laws"
+        prerequisites: [conductance_and_kohlrausch_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: batteries_and_corrosion
+        name: "Batteries and Corrosion"
+        prerequisites: [electrolysis_and_faradays_laws]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: Chemical Kinetics
+    order: 9
+    concepts:
+      - id: rate_of_reaction_and_rate_law
+        name: "Rate of Reaction and the Rate Law"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: order_and_molecularity
+        name: "Order and Molecularity"
+        prerequisites: [rate_of_reaction_and_rate_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: zero_and_first_order_kinetics
+        name: "Zero and First Order Kinetics"
+        prerequisites: [order_and_molecularity]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: half_life_of_reactions
+        name: "Half-Life of Reactions"
+        prerequisites: [zero_and_first_order_kinetics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: arrhenius_equation_and_activation_energy
+        name: "Arrhenius Equation and Activation Energy"
+        prerequisites: [zero_and_first_order_kinetics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: collision_theory
+        name: "Collision Theory"
+        prerequisites: [arrhenius_equation_and_activation_energy]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: catalysis
+        name: "Catalysis"
+        prerequisites: [arrhenius_equation_and_activation_energy]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+
+  - name: Solutions & Colligative Properties
+    order: 10
+    concepts:
+      - id: types_of_solutions_and_solubility
+        name: "Types of Solutions and Solubility"
+        prerequisites: [concentration_terms_molarity_molality]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: henrys_law
+        name: "Henry's Law"
+        prerequisites: [types_of_solutions_and_solubility]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: raoults_law_and_ideal_solutions
+        name: "Raoult's Law and Ideal Solutions"
+        prerequisites: [types_of_solutions_and_solubility]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: relative_lowering_of_vapour_pressure
+        name: "Relative Lowering of Vapour Pressure"
+        prerequisites: [raoults_law_and_ideal_solutions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: elevation_of_boiling_point
+        name: "Elevation of Boiling Point"
+        prerequisites: [relative_lowering_of_vapour_pressure]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: depression_of_freezing_point
+        name: "Depression of Freezing Point"
+        prerequisites: [relative_lowering_of_vapour_pressure]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: osmotic_pressure
+        name: "Osmotic Pressure"
+        prerequisites: [relative_lowering_of_vapour_pressure]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: vant_hoff_factor_and_association
+        name: "van't Hoff Factor, Association and Dissociation"
+        prerequisites: [osmotic_pressure]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+
+  - name: p-Block Elements
+    order: 11
+    concepts:
+      - id: group_13_boron_family
+        name: "Group 13: Boron Family"
+        prerequisites: [periodic_trends_in_properties]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: group_14_carbon_family
+        name: "Group 14: Carbon Family"
+        prerequisites: [group_13_boron_family]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: group_15_nitrogen_family
+        name: "Group 15: Nitrogen Family"
+        prerequisites: [group_14_carbon_family]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: group_16_oxygen_family
+        name: "Group 16: Oxygen Family"
+        prerequisites: [group_15_nitrogen_family]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: group_17_halogens
+        name: "Group 17: Halogens"
+        prerequisites: [group_16_oxygen_family]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: group_18_noble_gases
+        name: "Group 18: Noble Gases"
+        prerequisites: [group_17_halogens]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: d- and f-Block Elements
+    order: 12
+    concepts:
+      - id: general_properties_of_transition_elements
+        name: "General Properties of Transition Elements"
+        prerequisites: [periodic_trends_in_properties]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: variable_oxidation_states
+        name: "Variable Oxidation States"
+        prerequisites: [general_properties_of_transition_elements]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: colour_and_magnetic_properties
+        name: "Colour and Magnetic Properties"
+        prerequisites: [variable_oxidation_states]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: important_compounds_kmno4_k2cr2o7
+        name: "Important Compounds: KMnO4 and K2Cr2O7"
+        prerequisites: [variable_oxidation_states]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: lanthanoids_and_actinoids
+        name: "Lanthanoids and Actinoids"
+        prerequisites: [general_properties_of_transition_elements]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: Coordination Compounds
+    order: 13
+    concepts:
+      - id: werners_theory_and_terminology
+        name: "Werner's Theory and Coordination Terminology"
+        prerequisites: [ionic_bond_formation_and_lattice_energy]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: nomenclature_of_coordination_compounds
+        name: "Nomenclature of Coordination Compounds"
+        prerequisites: [werners_theory_and_terminology]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: isomerism_in_coordination_compounds
+        name: "Isomerism in Coordination Compounds"
+        prerequisites: [nomenclature_of_coordination_compounds]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: valence_bond_theory_of_complexes
+        name: "Valence Bond Theory of Complexes"
+        prerequisites: [hybridization_of_orbitals]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: crystal_field_theory
+        name: "Crystal Field Theory"
+        prerequisites: [valence_bond_theory_of_complexes]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: stability_and_applications_of_complexes
+        name: "Stability and Applications of Complexes"
+        prerequisites: [crystal_field_theory]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: General Organic Chemistry
+    order: 14
+    concepts:
+      - id: iupac_nomenclature
+        name: "IUPAC Nomenclature"
+        prerequisites: [covalent_bond_lewis_structures]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: isomerism_structural_and_stereo
+        name: "Structural and Stereo Isomerism"
+        prerequisites: [iupac_nomenclature]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: inductive_and_resonance_effects
+        name: "Inductive and Resonance Effects"
+        prerequisites: [resonance_and_formal_charge]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: hyperconjugation
+        name: "Hyperconjugation"
+        prerequisites: [inductive_and_resonance_effects]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: acidity_and_basicity_of_organic_compounds
+        name: "Acidity and Basicity of Organic Compounds"
+        prerequisites: [inductive_and_resonance_effects]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: reaction_intermediates
+        name: "Reaction Intermediates (Carbocations, Carbanions, Radicals)"
+        prerequisites: [hyperconjugation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: types_of_organic_reactions
+        name: "Types of Organic Reactions"
+        prerequisites: [reaction_intermediates]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+
+  - name: Hydrocarbons
+    order: 15
+    concepts:
+      - id: alkanes_preparation_and_reactions
+        name: "Alkanes: Preparation and Reactions"
+        prerequisites: [types_of_organic_reactions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: alkenes_preparation_and_reactions
+        name: "Alkenes: Preparation and Reactions"
+        prerequisites: [alkanes_preparation_and_reactions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: markovnikov_and_anti_markovnikov
+        name: "Markovnikov and Anti-Markovnikov Addition"
+        prerequisites: [alkenes_preparation_and_reactions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: alkynes_preparation_and_reactions
+        name: "Alkynes: Preparation and Reactions"
+        prerequisites: [alkenes_preparation_and_reactions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: aromaticity_and_huckels_rule
+        name: "Aromaticity and Huckel's Rule"
+        prerequisites: [types_of_organic_reactions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: electrophilic_aromatic_substitution
+        name: "Electrophilic Aromatic Substitution"
+        prerequisites: [aromaticity_and_huckels_rule]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: directive_influence_of_substituents
+        name: "Directive Influence of Substituents"
+        prerequisites: [electrophilic_aromatic_substitution]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+
+  - name: Oxygen & Nitrogen Containing Organic Compounds
+    order: 16
+    concepts:
+      - id: haloalkanes_and_haloarenes
+        name: "Haloalkanes and Haloarenes"
+        prerequisites: [types_of_organic_reactions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: sn1_and_sn2_mechanisms
+        name: "SN1 and SN2 Mechanisms"
+        prerequisites: [haloalkanes_and_haloarenes, reaction_intermediates]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: elimination_e1_e2
+        name: "Elimination Reactions (E1 and E2)"
+        prerequisites: [sn1_and_sn2_mechanisms]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: alcohols_and_phenols
+        name: "Alcohols and Phenols"
+        prerequisites: [sn1_and_sn2_mechanisms]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: ethers
+        name: "Ethers"
+        prerequisites: [alcohols_and_phenols]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: aldehydes_and_ketones
+        name: "Aldehydes and Ketones"
+        prerequisites: [alcohols_and_phenols]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: nucleophilic_addition_to_carbonyl
+        name: "Nucleophilic Addition to the Carbonyl Group"
+        prerequisites: [aldehydes_and_ketones]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: carboxylic_acids_and_derivatives
+        name: "Carboxylic Acids and Derivatives"
+        prerequisites: [aldehydes_and_ketones]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: amines_and_diazonium_salts
+        name: "Amines and Diazonium Salts"
+        prerequisites: [carboxylic_acids_and_derivatives]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: biomolecules
+        name: "Biomolecules (Carbohydrates, Proteins, Nucleic Acids)"
+        prerequisites: [carboxylic_acids_and_derivatives]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12

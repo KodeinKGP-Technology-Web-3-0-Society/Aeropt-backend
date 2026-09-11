@@ -1,7 +1,7 @@
 subject: Physics
 chapters:
   - name: Laws of Motion
-    order: 1
+    order: 3
     concepts:
       - id: newtons_1st_law
         name: Newton's 1st Law
@@ -96,7 +96,7 @@ chapters:
         estimated_minutes: 14
 
   - name: Work Energy & Power
-    order: 2
+    order: 4
     concepts:
       - id: work_by_constant_force
         name: Work by Constant Force
@@ -163,7 +163,7 @@ chapters:
         estimated_minutes: 10
 
   - name: Rotational Motion
-    order: 3
+    order: 5
     concepts:
       - id: angular_kinematics
         name: Angular Kinematics
@@ -242,3 +242,747 @@ chapters:
         content_sequence: [theory, example, practice, pyq]
         mastery_threshold: 75
         estimated_minutes: 14
+
+  - name: Units & Measurements
+    order: 1
+    concepts:
+      - id: si_units_and_dimensions
+        name: "SI Units and Dimensions"
+        prerequisites: []
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: dimensional_analysis
+        name: "Dimensional Analysis"
+        prerequisites: [si_units_and_dimensions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: significant_figures
+        name: "Significant Figures"
+        prerequisites: [si_units_and_dimensions]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+      - id: error_analysis_and_propagation
+        name: "Error Analysis and Propagation"
+        prerequisites: [significant_figures]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: vernier_and_screw_gauge
+        name: "Vernier Callipers and Screw Gauge"
+        prerequisites: [significant_figures]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: Kinematics
+    order: 2
+    concepts:
+      - id: scalars_and_vectors
+        name: "Scalars and Vectors"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: vector_addition_and_resolution
+        name: "Vector Addition and Resolution"
+        prerequisites: [scalars_and_vectors]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: distance_displacement_speed_velocity
+        name: "Distance, Displacement, Speed and Velocity"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: acceleration
+        name: "Acceleration"
+        prerequisites: [distance_displacement_speed_velocity]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: equations_of_motion_1d
+        name: "Equations of Motion in One Dimension"
+        prerequisites: [acceleration]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: motion_under_gravity
+        name: "Motion Under Gravity"
+        prerequisites: [equations_of_motion_1d]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: graphs_of_motion
+        name: "Graphs of Motion (x-t, v-t, a-t)"
+        prerequisites: [equations_of_motion_1d]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: relative_velocity
+        name: "Relative Velocity"
+        prerequisites: [vector_addition_and_resolution, distance_displacement_speed_velocity]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: projectile_motion
+        name: "Projectile Motion"
+        prerequisites: [equations_of_motion_1d, vector_addition_and_resolution]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: river_boat_and_rain_man_problems
+        name: "River-Boat and Rain-Man Problems"
+        prerequisites: [relative_velocity]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+
+  - name: Gravitation
+    order: 6
+    concepts:
+      - id: newtons_law_of_gravitation
+        name: "Newton's Law of Gravitation"
+        prerequisites: [newtons_2nd_law_f__ma]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: acceleration_due_to_gravity
+        name: "Acceleration Due to Gravity"
+        prerequisites: [newtons_law_of_gravitation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: variation_of_g_with_height_and_depth
+        name: "Variation of g with Height and Depth"
+        prerequisites: [acceleration_due_to_gravity]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: gravitational_field_and_potential
+        name: "Gravitational Field and Potential"
+        prerequisites: [newtons_law_of_gravitation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: gravitational_potential_energy_grav
+        name: "Gravitational Potential Energy (Gravitation)"
+        prerequisites: [gravitational_field_and_potential]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: escape_velocity
+        name: "Escape Velocity"
+        prerequisites: [gravitational_potential_energy_grav]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: orbital_velocity_and_satellites
+        name: "Orbital Velocity and Satellites"
+        prerequisites: [escape_velocity]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: keplers_laws
+        name: "Kepler's Laws"
+        prerequisites: [orbital_velocity_and_satellites]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: Oscillations & SHM
+    order: 7
+    concepts:
+      - id: shm_basics_displacement_equation
+        name: "SHM Basics and Displacement Equation"
+        prerequisites: [equations_of_motion_1d]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: velocity_and_acceleration_in_shm
+        name: "Velocity and Acceleration in SHM"
+        prerequisites: [shm_basics_displacement_equation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: energy_in_shm
+        name: "Energy in SHM"
+        prerequisites: [velocity_and_acceleration_in_shm, kinetic_energy]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: spring_block_oscillator
+        name: "Spring-Block Oscillator"
+        prerequisites: [energy_in_shm, spring_pe_hookes_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: simple_pendulum
+        name: "Simple Pendulum"
+        prerequisites: [shm_basics_displacement_equation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: damped_and_forced_oscillations
+        name: "Damped and Forced Oscillations"
+        prerequisites: [energy_in_shm]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: resonance
+        name: "Resonance"
+        prerequisites: [damped_and_forced_oscillations]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+
+  - name: Waves
+    order: 8
+    concepts:
+      - id: wave_motion_basics
+        name: "Wave Motion Basics"
+        prerequisites: [shm_basics_displacement_equation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: progressive_wave_equation
+        name: "Progressive Wave Equation"
+        prerequisites: [wave_motion_basics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: speed_of_wave_on_string
+        name: "Speed of a Wave on a String"
+        prerequisites: [progressive_wave_equation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: superposition_and_interference
+        name: "Superposition and Interference"
+        prerequisites: [progressive_wave_equation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: standing_waves_and_harmonics
+        name: "Standing Waves and Harmonics"
+        prerequisites: [superposition_and_interference]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 15
+      - id: beats
+        name: "Beats"
+        prerequisites: [superposition_and_interference]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: organ_pipes
+        name: "Organ Pipes (Open and Closed)"
+        prerequisites: [standing_waves_and_harmonics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: doppler_effect
+        name: "Doppler Effect"
+        prerequisites: [progressive_wave_equation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+
+  - name: Thermodynamics & Kinetic Theory
+    order: 9
+    concepts:
+      - id: temperature_and_thermal_expansion
+        name: "Temperature and Thermal Expansion"
+        prerequisites: []
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: calorimetry_and_latent_heat
+        name: "Calorimetry and Latent Heat"
+        prerequisites: [temperature_and_thermal_expansion]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: kinetic_theory_of_gases
+        name: "Kinetic Theory of Gases"
+        prerequisites: [temperature_and_thermal_expansion]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: ideal_gas_equation
+        name: "Ideal Gas Equation"
+        prerequisites: [kinetic_theory_of_gases]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: degrees_of_freedom_and_equipartition
+        name: "Degrees of Freedom and Equipartition"
+        prerequisites: [kinetic_theory_of_gases]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: first_law_of_thermodynamics
+        name: "First Law of Thermodynamics"
+        prerequisites: [ideal_gas_equation, work_by_constant_force]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: thermodynamic_processes
+        name: "Thermodynamic Processes (Isothermal, Adiabatic)"
+        prerequisites: [first_law_of_thermodynamics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: second_law_and_entropy
+        name: "Second Law and Entropy"
+        prerequisites: [thermodynamic_processes]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: carnot_engine_and_efficiency
+        name: "Carnot Engine and Efficiency"
+        prerequisites: [second_law_and_entropy]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: heat_transfer_modes
+        name: "Heat Transfer: Conduction, Convection, Radiation"
+        prerequisites: [temperature_and_thermal_expansion]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+
+  - name: Electrostatics
+    order: 10
+    concepts:
+      - id: coulombs_law
+        name: "Coulomb's Law"
+        prerequisites: [vector_addition_and_resolution]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: electric_field_due_to_point_charges
+        name: "Electric Field Due to Point Charges"
+        prerequisites: [coulombs_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: electric_field_lines
+        name: "Electric Field Lines"
+        prerequisites: [electric_field_due_to_point_charges]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+      - id: electric_dipole
+        name: "Electric Dipole"
+        prerequisites: [electric_field_due_to_point_charges]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: gauss_law
+        name: "Gauss's Law"
+        prerequisites: [electric_field_due_to_point_charges]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: applications_of_gauss_law
+        name: "Applications of Gauss's Law"
+        prerequisites: [gauss_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: electric_potential_and_potential_energy
+        name: "Electric Potential and Potential Energy"
+        prerequisites: [electric_field_due_to_point_charges]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: equipotential_surfaces
+        name: "Equipotential Surfaces"
+        prerequisites: [electric_potential_and_potential_energy]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+      - id: capacitance_and_parallel_plate_capacitor
+        name: "Capacitance and the Parallel Plate Capacitor"
+        prerequisites: [electric_potential_and_potential_energy]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: combination_of_capacitors
+        name: "Combination of Capacitors"
+        prerequisites: [capacitance_and_parallel_plate_capacitor]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: dielectrics
+        name: "Dielectrics"
+        prerequisites: [capacitance_and_parallel_plate_capacitor]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: Current Electricity
+    order: 11
+    concepts:
+      - id: electric_current_and_drift_velocity
+        name: "Electric Current and Drift Velocity"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: ohms_law_and_resistance
+        name: "Ohm's Law and Resistance"
+        prerequisites: [electric_current_and_drift_velocity]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: resistivity_and_temperature_dependence
+        name: "Resistivity and Temperature Dependence"
+        prerequisites: [ohms_law_and_resistance]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: series_and_parallel_resistors
+        name: "Series and Parallel Resistors"
+        prerequisites: [ohms_law_and_resistance]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: kirchhoffs_laws
+        name: "Kirchhoff's Laws"
+        prerequisites: [series_and_parallel_resistors]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: wheatstone_bridge
+        name: "Wheatstone Bridge"
+        prerequisites: [kirchhoffs_laws]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: meter_bridge_and_potentiometer
+        name: "Meter Bridge and Potentiometer"
+        prerequisites: [wheatstone_bridge]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: emf_and_internal_resistance
+        name: "EMF and Internal Resistance"
+        prerequisites: [kirchhoffs_laws]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: electrical_power_and_heating
+        name: "Electrical Power and Heating Effects"
+        prerequisites: [ohms_law_and_resistance]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: Magnetism & Electromagnetic Induction
+    order: 12
+    concepts:
+      - id: magnetic_field_and_lorentz_force
+        name: "Magnetic Field and Lorentz Force"
+        prerequisites: [electric_current_and_drift_velocity]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: motion_of_charge_in_magnetic_field
+        name: "Motion of a Charge in a Magnetic Field"
+        prerequisites: [magnetic_field_and_lorentz_force]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: biot_savart_law
+        name: "Biot-Savart Law"
+        prerequisites: [magnetic_field_and_lorentz_force]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: amperes_circuital_law
+        name: "Ampere's Circuital Law"
+        prerequisites: [biot_savart_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: force_between_parallel_currents
+        name: "Force Between Parallel Currents"
+        prerequisites: [amperes_circuital_law]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: torque_on_current_loop
+        name: "Torque on a Current Loop and the Moving-Coil Galvanometer"
+        prerequisites: [magnetic_field_and_lorentz_force, torque]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+      - id: magnetic_flux_and_faradays_law
+        name: "Magnetic Flux and Faraday's Law"
+        prerequisites: [amperes_circuital_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: lenzs_law
+        name: "Lenz's Law"
+        prerequisites: [magnetic_flux_and_faradays_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: self_and_mutual_inductance
+        name: "Self and Mutual Inductance"
+        prerequisites: [magnetic_flux_and_faradays_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: ac_circuits_and_impedance
+        name: "AC Circuits and Impedance"
+        prerequisites: [self_and_mutual_inductance]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: lc_oscillations_and_ac_resonance
+        name: "LC Oscillations and Resonance in AC Circuits"
+        prerequisites: [ac_circuits_and_impedance]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+
+  - name: Optics
+    order: 13
+    concepts:
+      - id: reflection_and_plane_mirrors
+        name: "Reflection and Plane Mirrors"
+        prerequisites: []
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: spherical_mirrors_and_mirror_formula
+        name: "Spherical Mirrors and the Mirror Formula"
+        prerequisites: [reflection_and_plane_mirrors]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: refraction_and_snells_law
+        name: "Refraction and Snell's Law"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: total_internal_reflection
+        name: "Total Internal Reflection"
+        prerequisites: [refraction_and_snells_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: refraction_at_spherical_surfaces_and_lens_formula
+        name: "Refraction at Spherical Surfaces and the Lens Formula"
+        prerequisites: [refraction_and_snells_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: lens_combinations_and_power
+        name: "Lens Combinations and Power"
+        prerequisites: [refraction_at_spherical_surfaces_and_lens_formula]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: prism_and_dispersion
+        name: "Prism and Dispersion"
+        prerequisites: [refraction_and_snells_law]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: optical_instruments
+        name: "Optical Instruments (Microscope, Telescope)"
+        prerequisites: [lens_combinations_and_power]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+      - id: youngs_double_slit_experiment
+        name: "Young's Double Slit Experiment"
+        prerequisites: [superposition_and_interference]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: diffraction_at_single_slit
+        name: "Diffraction at a Single Slit"
+        prerequisites: [youngs_double_slit_experiment]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: polarisation
+        name: "Polarisation"
+        prerequisites: [youngs_double_slit_experiment]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: Modern Physics
+    order: 14
+    concepts:
+      - id: photoelectric_effect
+        name: "Photoelectric Effect"
+        prerequisites: [kinetic_energy]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: matter_waves_de_broglie
+        name: "Matter Waves and the de Broglie Hypothesis"
+        prerequisites: [photoelectric_effect]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: atomic_models_and_bohr_theory
+        name: "Atomic Models and Bohr Theory"
+        prerequisites: [photoelectric_effect]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: hydrogen_spectrum
+        name: "Hydrogen Spectrum"
+        prerequisites: [atomic_models_and_bohr_theory]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: x_rays_and_moseleys_law
+        name: "X-Rays and Moseley's Law"
+        prerequisites: [atomic_models_and_bohr_theory]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: nuclear_composition_and_binding_energy
+        name: "Nuclear Composition and Binding Energy"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: radioactivity_and_decay_law
+        name: "Radioactivity and the Decay Law"
+        prerequisites: [nuclear_composition_and_binding_energy]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: nuclear_fission_and_fusion
+        name: "Nuclear Fission and Fusion"
+        prerequisites: [nuclear_composition_and_binding_energy]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: semiconductors_and_pn_junction
+        name: "Semiconductors and the p-n Junction"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: logic_gates
+        name: "Logic Gates"
+        prerequisites: [semiconductors_and_pn_junction]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10

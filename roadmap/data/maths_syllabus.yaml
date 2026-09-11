@@ -200,3 +200,600 @@ chapters:
         content_sequence: [theory, example, practice]
         mastery_threshold: 70
         estimated_minutes: 8
+
+  - name: Complex Numbers
+    order: 4
+    concepts:
+      - id: complex_number_basics_and_iota
+        name: "Complex Number Basics and Iota"
+        prerequisites: [nature_of_roots_and_discriminant]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: argand_plane_and_modulus_argument
+        name: "Argand Plane, Modulus and Argument"
+        prerequisites: [complex_number_basics_and_iota]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: polar_and_euler_form
+        name: "Polar and Euler Form"
+        prerequisites: [argand_plane_and_modulus_argument]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: de_moivres_theorem
+        name: "De Moivre's Theorem"
+        prerequisites: [polar_and_euler_form]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: cube_roots_of_unity
+        name: "Cube Roots of Unity"
+        prerequisites: [de_moivres_theorem]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: nth_roots_of_unity
+        name: "nth Roots of Unity"
+        prerequisites: [cube_roots_of_unity]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: loci_in_the_complex_plane
+        name: "Loci in the Complex Plane"
+        prerequisites: [argand_plane_and_modulus_argument]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 15
+
+  - name: Permutations & Combinations
+    order: 5
+    concepts:
+      - id: fundamental_principle_of_counting
+        name: "Fundamental Principle of Counting"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: permutations
+        name: "Permutations"
+        prerequisites: [fundamental_principle_of_counting]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: combinations
+        name: "Combinations"
+        prerequisites: [permutations]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: circular_permutations
+        name: "Circular Permutations"
+        prerequisites: [permutations]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: permutations_with_restrictions
+        name: "Permutations with Restrictions and Repetitions"
+        prerequisites: [combinations]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: distribution_and_grouping
+        name: "Distribution into Groups"
+        prerequisites: [combinations]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+
+  - name: Binomial Theorem
+    order: 6
+    concepts:
+      - id: binomial_expansion_for_positive_index
+        name: "Binomial Expansion for a Positive Integral Index"
+        prerequisites: [combinations]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: general_and_middle_term
+        name: "General Term and Middle Term"
+        prerequisites: [binomial_expansion_for_positive_index]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: term_independent_of_x
+        name: "Term Independent of x"
+        prerequisites: [general_and_middle_term]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: binomial_coefficient_identities
+        name: "Binomial Coefficient Identities"
+        prerequisites: [general_and_middle_term]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 15
+      - id: binomial_for_any_index
+        name: "Binomial Theorem for Any Index"
+        prerequisites: [binomial_expansion_for_positive_index]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+
+  - name: Matrices & Determinants
+    order: 7
+    concepts:
+      - id: matrix_types_and_operations
+        name: "Matrix Types and Operations"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: transpose_and_special_matrices
+        name: "Transpose and Special Matrices"
+        prerequisites: [matrix_types_and_operations]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: determinant_and_properties
+        name: "Determinants and Their Properties"
+        prerequisites: [matrix_types_and_operations]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: minors_cofactors_and_adjoint
+        name: "Minors, Cofactors and Adjoint"
+        prerequisites: [determinant_and_properties]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: inverse_of_a_matrix
+        name: "Inverse of a Matrix"
+        prerequisites: [minors_cofactors_and_adjoint]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: system_of_linear_equations
+        name: "Solving Systems of Linear Equations"
+        prerequisites: [inverse_of_a_matrix]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: rank_and_consistency
+        name: "Consistency of Linear Systems"
+        prerequisites: [system_of_linear_equations]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+
+  - name: Straight Lines & Circles
+    order: 8
+    concepts:
+      - id: distance_section_formula
+        name: "Distance and Section Formula"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: slope_and_forms_of_a_line
+        name: "Slope and Forms of a Straight Line"
+        prerequisites: [distance_section_formula]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: angle_between_lines
+        name: "Angle Between Two Lines"
+        prerequisites: [slope_and_forms_of_a_line]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: distance_of_point_from_line
+        name: "Distance of a Point from a Line"
+        prerequisites: [slope_and_forms_of_a_line]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: family_of_lines_and_concurrency
+        name: "Family of Lines and Concurrency"
+        prerequisites: [distance_of_point_from_line]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: circle_equation_and_forms
+        name: "Equation of a Circle and Its Forms"
+        prerequisites: [distance_section_formula]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: tangent_and_normal_to_a_circle
+        name: "Tangent and Normal to a Circle"
+        prerequisites: [circle_equation_and_forms]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: family_of_circles_and_radical_axis
+        name: "Family of Circles and the Radical Axis"
+        prerequisites: [tangent_and_normal_to_a_circle]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+
+  - name: Conic Sections
+    order: 9
+    concepts:
+      - id: parabola_standard_equation
+        name: "Parabola: Standard Equation and Properties"
+        prerequisites: [circle_equation_and_forms]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: tangent_and_normal_to_parabola
+        name: "Tangent and Normal to a Parabola"
+        prerequisites: [parabola_standard_equation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: ellipse_standard_equation
+        name: "Ellipse: Standard Equation and Properties"
+        prerequisites: [parabola_standard_equation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: hyperbola_standard_equation
+        name: "Hyperbola: Standard Equation and Properties"
+        prerequisites: [ellipse_standard_equation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: eccentricity_and_directrix
+        name: "Eccentricity, Focus and Directrix"
+        prerequisites: [hyperbola_standard_equation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+
+  - name: Functions, Limits & Continuity
+    order: 10
+    concepts:
+      - id: relations_and_functions
+        name: "Relations and Functions"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: domain_range_and_types_of_functions
+        name: "Domain, Range and Types of Functions"
+        prerequisites: [relations_and_functions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: composite_and_inverse_functions
+        name: "Composite and Inverse Functions"
+        prerequisites: [domain_range_and_types_of_functions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: limits_basics_and_algebra
+        name: "Limits: Basics and Algebra of Limits"
+        prerequisites: [domain_range_and_types_of_functions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: standard_limits_and_expansions
+        name: "Standard Limits and Series Expansions"
+        prerequisites: [limits_basics_and_algebra]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: indeterminate_forms_and_lhospital
+        name: "Indeterminate Forms and L'Hospital's Rule"
+        prerequisites: [standard_limits_and_expansions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: continuity_of_functions
+        name: "Continuity of Functions"
+        prerequisites: [limits_basics_and_algebra]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: differentiability
+        name: "Differentiability"
+        prerequisites: [continuity_of_functions]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+
+  - name: Differentiation & Applications
+    order: 11
+    concepts:
+      - id: derivative_from_first_principles
+        name: "Derivative from First Principles"
+        prerequisites: [differentiability]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: rules_of_differentiation
+        name: "Rules of Differentiation (Product, Quotient, Chain)"
+        prerequisites: [derivative_from_first_principles]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: implicit_and_parametric_differentiation
+        name: "Implicit and Parametric Differentiation"
+        prerequisites: [rules_of_differentiation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: logarithmic_differentiation
+        name: "Logarithmic Differentiation"
+        prerequisites: [rules_of_differentiation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: tangents_and_normals
+        name: "Tangents and Normals"
+        prerequisites: [rules_of_differentiation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: monotonicity_increasing_decreasing
+        name: "Monotonicity: Increasing and Decreasing Functions"
+        prerequisites: [rules_of_differentiation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: maxima_and_minima
+        name: "Maxima and Minima"
+        prerequisites: [monotonicity_increasing_decreasing]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: rolle_and_mean_value_theorems
+        name: "Rolle's and Mean Value Theorems"
+        prerequisites: [monotonicity_increasing_decreasing]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+
+  - name: Integration
+    order: 12
+    concepts:
+      - id: indefinite_integrals_basics
+        name: "Indefinite Integrals: Basics"
+        prerequisites: [rules_of_differentiation]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: integration_by_substitution
+        name: "Integration by Substitution"
+        prerequisites: [indefinite_integrals_basics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: integration_by_parts
+        name: "Integration by Parts"
+        prerequisites: [integration_by_substitution]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: partial_fractions_integration
+        name: "Integration by Partial Fractions"
+        prerequisites: [integration_by_substitution]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: definite_integrals_and_properties
+        name: "Definite Integrals and Their Properties"
+        prerequisites: [integration_by_parts]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: definite_integral_as_limit_of_sum
+        name: "Definite Integral as the Limit of a Sum"
+        prerequisites: [definite_integrals_and_properties]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+      - id: area_under_curves
+        name: "Area Under Curves"
+        prerequisites: [definite_integrals_and_properties]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: differential_equations_basics
+        name: "Differential Equations: Order, Degree and Formation"
+        prerequisites: [indefinite_integrals_basics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: variable_separable_and_linear_de
+        name: "Variable Separable and Linear Differential Equations"
+        prerequisites: [differential_equations_basics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+
+  - name: Vectors & 3D Geometry
+    order: 13
+    concepts:
+      - id: vector_algebra_basics
+        name: "Vector Algebra Basics"
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: dot_product_and_applications
+        name: "Dot Product and Its Applications"
+        prerequisites: [vector_algebra_basics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: cross_product_and_applications
+        name: "Cross Product and Its Applications"
+        prerequisites: [dot_product_and_applications]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: scalar_and_vector_triple_product
+        name: "Scalar and Vector Triple Product"
+        prerequisites: [cross_product_and_applications]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: direction_cosines_and_ratios
+        name: "Direction Cosines and Direction Ratios"
+        prerequisites: [vector_algebra_basics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: line_in_space
+        name: "Equation of a Line in Space"
+        prerequisites: [direction_cosines_and_ratios]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: plane_in_space
+        name: "Equation of a Plane"
+        prerequisites: [line_in_space]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: angle_and_distance_in_3d
+        name: "Angles and Distances in 3D"
+        prerequisites: [plane_in_space]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+
+  - name: Probability & Statistics
+    order: 14
+    concepts:
+      - id: mean_median_mode
+        name: "Mean, Median and Mode"
+        prerequisites: []
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: variance_and_standard_deviation
+        name: "Variance and Standard Deviation"
+        prerequisites: [mean_median_mode]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: probability_basics_and_sample_space
+        name: "Probability Basics and Sample Space"
+        prerequisites: [fundamental_principle_of_counting]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: addition_and_multiplication_theorems
+        name: "Addition and Multiplication Theorems"
+        prerequisites: [probability_basics_and_sample_space]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: conditional_probability
+        name: "Conditional Probability"
+        prerequisites: [addition_and_multiplication_theorems]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: bayes_theorem
+        name: "Bayes' Theorem"
+        prerequisites: [conditional_probability]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: binomial_distribution
+        name: "Binomial Distribution"
+        prerequisites: [bayes_theorem, binomial_expansion_for_positive_index]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: random_variable_and_expectation
+        name: "Random Variables and Expectation"
+        prerequisites: [binomial_distribution]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12

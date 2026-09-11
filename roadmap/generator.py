@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections import deque
+import heapq
 from typing import Any, Dict, List, Optional, Tuple
 
 from django.db import transaction
@@ -149,7 +149,23 @@ def _classify_node(
     return NodeType.LEARN, NodeStatus.PENDING
 
 
-def topological_sort(concept_ids: List[str], prereqs: Dict[str, List[str]]) -> List[str]:
+def topological_sort(
+    concept_ids: List[str],
+    prereqs: Dict[str, List[str]],
+    priority: Optional[Dict[str, Any]] = None,
+) -> List[str]:
+    """Order concepts so every prerequisite precedes its dependents.
+
+    `priority` breaks ties between concepts that are *all* currently
+    unblocked — pass {concept_id: sort_key} to teach in syllabus order
+    (chapter 1 before chapter 7). Without it, ties break alphabetically by
+    concept_id, which scatters chapters: a 16-chapter Chemistry path would
+    open on "Acid-Base Concepts" purely because 'a' sorts early.
+
+    Ties are resolved with a heap rather than a FIFO queue, so a
+    just-unblocked chapter-1 concept is picked ahead of an already-queued
+    chapter-7 one instead of waiting behind it.
+    """
     valid = set(concept_ids)
     in_degree = {cid: 0 for cid in concept_ids}
     adjacency: Dict[str, List[str]] = {cid: [] for cid in concept_ids}
@@ -161,20 +177,29 @@ def topological_sort(concept_ids: List[str], prereqs: Dict[str, List[str]]) -> L
             adjacency[prereq].append(cid)
             in_degree[cid] += 1
 
-    queue = deque(sorted([cid for cid, deg in in_degree.items() if deg == 0]))
+    def key(cid: str):
+        # (caller's ordering, concept_id) — the id keeps it deterministic
+        # when two concepts share a priority.
+        return ((priority or {}).get(cid, 0), cid)
+
+    heap = [key(cid) for cid, deg in in_degree.items() if deg == 0]
+    heapq.heapify(heap)
     ordered: List[str] = []
 
-    while queue:
-        current = queue.popleft()
+    while heap:
+        _, current = heapq.heappop(heap)
         ordered.append(current)
-        for nxt in sorted(adjacency.get(current, [])):
+        for nxt in adjacency.get(current, []):
             in_degree[nxt] -= 1
             if in_degree[nxt] == 0:
-                queue.append(nxt)
+                heapq.heappush(heap, key(nxt))
 
     if len(ordered) != len(concept_ids):
-        remaining = [cid for cid in concept_ids if cid not in ordered]
-        ordered.extend(sorted(remaining))
+        # Cycle (or ids referenced but absent) — append the stragglers in
+        # priority order rather than dropping them from the roadmap.
+        seen = set(ordered)
+        remaining = sorted((cid for cid in concept_ids if cid not in seen), key=key)
+        ordered.extend(remaining)
 
     return ordered
 
@@ -231,20 +256,34 @@ def generate_learning_path(user, *, subject: str = "Physics", force: bool = Fals
         existing.is_active = False
         existing.save(update_fields=["is_active", "updated_at"])
 
-    live_rows = _read_live_concepts(subject)
-    if not live_rows:
-        # Supabase concepts empty/unreachable for this subject — fall back to
-        # the canonical syllabus spec so the student still gets a roadmap.
-        # True today for every subject except Physics (the knowledge graph
-        # was only ever seeded with Physics content).
-        live_rows = _syllabus_concepts_fallback(subject)
+    # The roadmap is the *syllabus*, not just the seeded content: union what
+    # the knowledge graph actually has with everything the syllabus spec
+    # describes. Seeded rows win on naming (they're the live truth); the rest
+    # come from YAML and are flagged not-yet-teachable at serialization time
+    # (PathNodeSerializer.content_ready), so the student sees the whole plan
+    # and which parts have lessons ready.
+    #
+    # This used to be either/or — live rows, else YAML — which meant adding a
+    # chapter to the syllabus had no effect at all for any subject that had
+    # even one seeded concept. Physics showed 3 of its 14 chapters and looked
+    # complete.
+    rows_by_id: Dict[str, Dict[str, Any]] = {
+        row["concept_id"]: row for row in _syllabus_concepts_fallback(subject)
+    }
+    for row in _read_live_concepts(subject):
+        rows_by_id[row["concept_id"]] = row
+    live_rows = list(rows_by_id.values())
     if not live_rows:
         raise ValueError("No concepts available to build a roadmap.")
 
     merged = _merge_concepts(live_rows, subject)
     concept_ids = [item["concept_id"] for item in merged]
     prereqs = prerequisite_map(subject)
-    ordered_ids = topological_sort(concept_ids, prereqs)
+    # _merge_concepts already sorted by (chapter_order, chapter, concept_id),
+    # so its index is exactly "syllabus order" — use it to break ties so the
+    # path opens on chapter 1 rather than whatever sorts first alphabetically.
+    syllabus_order = {item["concept_id"]: i for i, item in enumerate(merged)}
+    ordered_ids = topological_sort(concept_ids, prereqs, priority=syllabus_order)
     order_lookup = {cid: idx for idx, cid in enumerate(ordered_ids)}
     merged.sort(key=lambda item: order_lookup.get(item["concept_id"], 999))
 
