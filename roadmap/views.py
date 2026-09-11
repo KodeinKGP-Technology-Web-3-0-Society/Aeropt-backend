@@ -16,6 +16,7 @@ from roadmap.serializers import (
     PathNodeSerializer,
     PathProgressUpdateSerializer,
 )
+from roadmap.syllabus import available_subjects
 from apis.cache_layer import (
     TTL_ROADMAP,
     get_or_set,
@@ -39,15 +40,26 @@ _NO_SYLLABUS_MESSAGE = (
 )
 
 
+def _resolve_subject(request) -> str:
+    """?subject=Chemistry — falls back to Physics (the pre-existing default,
+    so every caller that never sends this param keeps working unchanged) and
+    rejects anything without a real syllabus file rather than silently
+    building an empty roadmap for a typo'd subject name."""
+    requested = request.query_params.get("subject") or "Physics"
+    valid = available_subjects()
+    return requested if requested in valid else "Physics"
+
+
 class RoadmapView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        subject = _resolve_subject(request)
         regenerate = request.query_params.get("regenerate") == "1"
         try:
             if regenerate:
-                path = generate_learning_path(request.user, force=True)
-                invalidate_roadmap(request.user)
+                path = generate_learning_path(request.user, subject=subject, force=True)
+                invalidate_roadmap(request.user, subject)
 
                 def _fresh():
                     return LearningPathSerializer(
@@ -57,16 +69,16 @@ class RoadmapView(APIView):
                 payload = _fresh()
                 from django.core.cache import cache
 
-                cache.set(roadmap_key(request.user), payload, TTL_ROADMAP)
+                cache.set(roadmap_key(request.user, subject), payload, TTL_ROADMAP)
                 return Response(payload)
 
             def _build():
-                path = get_or_generate_learning_path(request.user)
+                path = get_or_generate_learning_path(request.user, subject=subject)
                 return LearningPathSerializer(
                     path, context=_roadmap_serializer_context(request.user)
                 ).data
 
-            payload = get_or_set(roadmap_key(request.user), TTL_ROADMAP, _build)
+            payload = get_or_set(roadmap_key(request.user, subject), TTL_ROADMAP, _build)
             return Response(payload)
         except ValueError:
             return Response(
@@ -75,9 +87,10 @@ class RoadmapView(APIView):
             )
 
     def post(self, request):
+        subject = _resolve_subject(request)
         try:
-            path = generate_learning_path(request.user, force=True)
-            invalidate_user_reads(request.user)
+            path = generate_learning_path(request.user, subject=subject, force=True)
+            invalidate_user_reads(request.user, subject)
         except ValueError:
             return Response(
                 {"detail": _NO_SYLLABUS_MESSAGE},
@@ -89,12 +102,22 @@ class RoadmapView(APIView):
         )
 
 
+class RoadmapSubjectsView(APIView):
+    """Which subjects actually have a roadmap available right now."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({"subjects": available_subjects()})
+
+
 class RoadmapNextView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        subject = _resolve_subject(request)
         try:
-            path = get_or_generate_learning_path(request.user)
+            path = get_or_generate_learning_path(request.user, subject=subject)
         except ValueError:
             return Response(
                 {"detail": _NO_SYLLABUS_MESSAGE},

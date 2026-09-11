@@ -30,8 +30,8 @@ def progress_key(user) -> str:
     return f"prog:{_uid(user)}"
 
 
-def roadmap_key(user) -> str:
-    return f"roadmap:{_uid(user)}"
+def roadmap_key(user, subject: str = "Physics") -> str:
+    return f"roadmap:{_uid(user)}:{subject}"
 
 
 def sandbox_queue_key(user) -> str:
@@ -52,7 +52,7 @@ def get_or_set(key: str, ttl: int, producer: Callable[[], Any]) -> Any:
     return value
 
 
-def invalidate_user_reads(user) -> None:
+def invalidate_user_reads(user, subject: str = "Physics") -> None:
     """Drop per-user read caches after proficiency / path / onboarding changes."""
     if user is None:
         return
@@ -60,13 +60,13 @@ def invalidate_user_reads(user) -> None:
         [
             dashboard_key(user),
             progress_key(user),
-            roadmap_key(user),
+            roadmap_key(user, subject),
             sandbox_queue_key(user),
         ]
     )
 
 
-def invalidate_roadmap(user) -> None:
+def invalidate_roadmap(user, subject: str = "Physics") -> None:
     if user is None:
         return
-    cache.delete_many([roadmap_key(user), sandbox_queue_key(user)])
+    cache.delete_many([roadmap_key(user, subject), sandbox_queue_key(user)])

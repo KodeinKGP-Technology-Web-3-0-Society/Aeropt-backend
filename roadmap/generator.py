@@ -14,30 +14,37 @@ from users.models import JourneyType, StudentProfile, SyllabusPlacement
 from users.supabase_sync import get_supabase_client, is_supabase_configured
 
 
-def _read_live_concepts() -> List[Dict[str, Any]]:
+def _read_live_concepts(subject: str = "Physics") -> List[Dict[str, Any]]:
     if not is_supabase_configured():
         return []
     client = get_supabase_client()
     if client is None:
         return []
-    res = client.table("concepts").select("concept_id, concept_name, chapter, subject").execute()
+    res = (
+        client.table("concepts")
+        .select("concept_id, concept_name, chapter, subject")
+        .eq("subject", subject)
+        .execute()
+    )
     return res.data or []
 
 
-def _syllabus_concepts_fallback() -> List[Dict[str, Any]]:
+def _syllabus_concepts_fallback(subject: str = "Physics") -> List[Dict[str, Any]]:
     """Build concept rows from the canonical syllabus spec.
 
-    Used when Supabase `concepts` is empty/unreachable so the roadmap can still
-    be generated from the YAML source of truth instead of failing hard.
+    Used when Supabase `concepts` is empty/unreachable for this subject (true
+    today for every subject except Physics — the knowledge graph was only ever
+    seeded with Physics content) so the roadmap can still be generated from
+    the YAML source of truth instead of failing hard.
     """
     rows: List[Dict[str, Any]] = []
-    for concept_id, spec in syllabus_concept_map().items():
+    for concept_id, spec in syllabus_concept_map(subject).items():
         rows.append(
             {
                 "concept_id": concept_id,
                 "concept_name": spec.get("name") or concept_id,
-                "chapter": spec.get("chapter") or "Physics",
-                "subject": spec.get("subject") or "Physics",
+                "chapter": spec.get("chapter") or subject,
+                "subject": spec.get("subject") or subject,
             }
         )
     return rows
@@ -160,15 +167,15 @@ def topological_sort(concept_ids: List[str], prereqs: Dict[str, List[str]]) -> L
     return ordered
 
 
-def _merge_concepts(live_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    spec_map = syllabus_concept_map()
-    chapter_orders = chapter_order_map()
+def _merge_concepts(live_rows: List[Dict[str, Any]], subject: str = "Physics") -> List[Dict[str, Any]]:
+    spec_map = syllabus_concept_map(subject)
+    chapter_orders = chapter_order_map(subject)
     merged: List[Dict[str, Any]] = []
 
     for row in live_rows:
         concept_id = row["concept_id"]
         spec = spec_map.get(concept_id, {})
-        chapter = row.get("chapter") or spec.get("chapter") or "Physics"
+        chapter = row.get("chapter") or spec.get("chapter") or subject
         merged.append(
             {
                 "concept_id": concept_id,
@@ -212,17 +219,19 @@ def generate_learning_path(user, *, subject: str = "Physics", force: bool = Fals
         existing.is_active = False
         existing.save(update_fields=["is_active", "updated_at"])
 
-    live_rows = _read_live_concepts()
+    live_rows = _read_live_concepts(subject)
     if not live_rows:
-        # Supabase concepts empty/unreachable — fall back to the canonical
-        # syllabus spec so the student still gets a roadmap.
-        live_rows = _syllabus_concepts_fallback()
+        # Supabase concepts empty/unreachable for this subject — fall back to
+        # the canonical syllabus spec so the student still gets a roadmap.
+        # True today for every subject except Physics (the knowledge graph
+        # was only ever seeded with Physics content).
+        live_rows = _syllabus_concepts_fallback(subject)
     if not live_rows:
         raise ValueError("No concepts available to build a roadmap.")
 
-    merged = _merge_concepts(live_rows)
+    merged = _merge_concepts(live_rows, subject)
     concept_ids = [item["concept_id"] for item in merged]
-    prereqs = prerequisite_map()
+    prereqs = prerequisite_map(subject)
     ordered_ids = topological_sort(concept_ids, prereqs)
     order_lookup = {cid: idx for idx, cid in enumerate(ordered_ids)}
     merged.sort(key=lambda item: order_lookup.get(item["concept_id"], 999))

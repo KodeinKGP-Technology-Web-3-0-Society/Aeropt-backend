@@ -1,0 +1,202 @@
+subject: Maths
+chapters:
+  - name: Quadratic Equations
+    order: 1
+    concepts:
+      - id: nature_of_roots_and_discriminant
+        name: Nature of Roots and the Discriminant
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: sum_and_product_of_roots
+        name: Sum and Product of Roots
+        prerequisites: [nature_of_roots_and_discriminant]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: forming_equation_from_given_roots
+        name: Forming an Equation from Given Roots
+        prerequisites: [sum_and_product_of_roots]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+      - id: quadratic_inequalities
+        name: Quadratic Inequalities
+        prerequisites: [nature_of_roots_and_discriminant]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: location_of_roots
+        name: Location of Roots (Sign Scheme)
+        prerequisites: [quadratic_inequalities]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: common_roots_of_two_equations
+        name: Common Roots of Two Quadratic Equations
+        prerequisites: [sum_and_product_of_roots]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: quadratic_expressions_max_min
+        name: Maximum/Minimum Value of a Quadratic Expression
+        prerequisites: [nature_of_roots_and_discriminant]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: transformation_of_equations
+        name: Transformation of Equations
+        prerequisites: [forming_equation_from_given_roots]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+
+  - name: Sequences & Series
+    order: 2
+    concepts:
+      - id: arithmetic_progression_basics
+        name: Arithmetic Progression — Basics
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: ap_sum_and_nth_term
+        name: AP — Sum of n Terms and nth Term
+        prerequisites: [arithmetic_progression_basics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: geometric_progression_basics
+        name: Geometric Progression — Basics
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: gp_sum_and_nth_term
+        name: GP — Sum of n Terms and nth Term
+        prerequisites: [geometric_progression_basics]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: sum_to_infinity_of_gp
+        name: Sum to Infinity of a GP
+        prerequisites: [gp_sum_and_nth_term]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+      - id: arithmetic_geometric_progression
+        name: Arithmetic-Geometric Progression (AGP)
+        prerequisites: [ap_sum_and_nth_term, gp_sum_and_nth_term]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: harmonic_progression
+        name: Harmonic Progression
+        prerequisites: [arithmetic_progression_basics]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+      - id: means_am_gm_hm_and_inequality
+        name: AM, GM, HM and the AM-GM-HM Inequality
+        prerequisites: [harmonic_progression]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: sum_of_special_series_sigma_notation
+        name: Sum of Special Series (Σn, Σn², Σn³)
+        prerequisites: [ap_sum_and_nth_term]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 15
+      - id: method_of_differences
+        name: Method of Differences
+        prerequisites: [sum_of_special_series_sigma_notation]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: Trigonometric Ratios & Identities
+    order: 3
+    concepts:
+      - id: trigonometric_ratios_and_signs
+        name: Trigonometric Ratios and Signs in Quadrants
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: trigonometric_identities
+        name: Basic Trigonometric Identities
+        prerequisites: [trigonometric_ratios_and_signs]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: compound_angle_formulas
+        name: Compound Angle Formulas
+        prerequisites: [trigonometric_identities]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: multiple_and_submultiple_angles
+        name: Multiple and Submultiple Angle Formulas
+        prerequisites: [compound_angle_formulas]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: sum_to_product_and_product_to_sum
+        name: Sum-to-Product and Product-to-Sum Formulas
+        prerequisites: [compound_angle_formulas]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: trigonometric_equations
+        name: Trigonometric Equations — General Solutions
+        prerequisites: [multiple_and_submultiple_angles]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: inverse_trigonometric_functions_basics
+        name: Inverse Trigonometric Functions — Basics
+        prerequisites: [trigonometric_ratios_and_signs]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: properties_of_inverse_trig_functions
+        name: Properties of Inverse Trigonometric Functions
+        prerequisites: [inverse_trigonometric_functions_basics]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: range_and_domain_of_trig_functions
+        name: Range and Domain of Trigonometric Functions
+        prerequisites: [trigonometric_ratios_and_signs]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8

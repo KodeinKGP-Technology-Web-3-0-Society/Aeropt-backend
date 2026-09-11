@@ -1,0 +1,223 @@
+subject: Chemistry
+chapters:
+  - name: Mole Concept & Stoichiometry
+    order: 1
+    concepts:
+      - id: atomic_mass_and_molecular_mass
+        name: Atomic Mass and Molecular Mass
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: mole_concept_avogadro_number
+        name: Mole Concept and Avogadro's Number
+        prerequisites: [atomic_mass_and_molecular_mass]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: molar_mass_and_gram_equivalent
+        name: Molar Mass and Gram Equivalent
+        prerequisites: [mole_concept_avogadro_number]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: percentage_composition
+        name: Percentage Composition
+        prerequisites: [molar_mass_and_gram_equivalent]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+      - id: empirical_and_molecular_formula
+        name: Empirical and Molecular Formula
+        prerequisites: [percentage_composition]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: stoichiometric_calculations
+        name: Stoichiometric Calculations
+        prerequisites: [empirical_and_molecular_formula]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: limiting_reagent
+        name: Limiting Reagent
+        prerequisites: [stoichiometric_calculations]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: concentration_terms_molarity_molality
+        name: Concentration Terms — Molarity and Molality
+        prerequisites: [mole_concept_avogadro_number]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: dilution_and_mixing_of_solutions
+        name: Dilution and Mixing of Solutions
+        prerequisites: [concentration_terms_molarity_molality]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: equivalent_concept_in_redox_and_acid_base
+        name: Equivalent Concept in Redox and Acid-Base Reactions
+        prerequisites: [molar_mass_and_gram_equivalent]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+
+  - name: Atomic Structure
+    order: 2
+    concepts:
+      - id: discovery_of_subatomic_particles
+        name: Discovery of Subatomic Particles
+        prerequisites: []
+        exam_weight: low
+        content_sequence: [theory, example]
+        mastery_threshold: 65
+        estimated_minutes: 8
+      - id: rutherford_model_and_its_limitations
+        name: Rutherford's Model and Its Limitations
+        prerequisites: [discovery_of_subatomic_particles]
+        exam_weight: medium
+        content_sequence: [theory, example]
+        mastery_threshold: 65
+        estimated_minutes: 8
+      - id: bohr_model_of_hydrogen_atom
+        name: Bohr Model of the Hydrogen Atom
+        prerequisites: [rutherford_model_and_its_limitations]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: dual_nature_of_matter_de_broglie
+        name: Dual Nature of Matter — de Broglie Wavelength
+        prerequisites: [bohr_model_of_hydrogen_atom]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: heisenberg_uncertainty_principle
+        name: Heisenberg's Uncertainty Principle
+        prerequisites: [dual_nature_of_matter_de_broglie]
+        exam_weight: medium
+        content_sequence: [theory, example]
+        mastery_threshold: 65
+        estimated_minutes: 8
+      - id: quantum_numbers
+        name: Quantum Numbers
+        prerequisites: [bohr_model_of_hydrogen_atom]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 12
+      - id: shapes_of_atomic_orbitals
+        name: Shapes of Atomic Orbitals
+        prerequisites: [quantum_numbers]
+        exam_weight: high
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: aufbau_principle_and_electronic_configuration
+        name: Aufbau Principle and Electronic Configuration
+        prerequisites: [shapes_of_atomic_orbitals]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: paulis_exclusion_principle_and_hunds_rule
+        name: Pauli's Exclusion Principle and Hund's Rule
+        prerequisites: [aufbau_principle_and_electronic_configuration]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+      - id: exceptions_in_electronic_configuration
+        name: Exceptions in Electronic Configuration (Cr, Cu, etc.)
+        prerequisites: [aufbau_principle_and_electronic_configuration]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+
+  - name: Chemical Bonding & Molecular Structure
+    order: 3
+    concepts:
+      - id: covalent_bond_lewis_structures
+        name: Covalent Bond and Lewis Structures
+        prerequisites: []
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
+      - id: octet_rule_and_exceptions
+        name: Octet Rule and Its Exceptions
+        prerequisites: [covalent_bond_lewis_structures]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+      - id: ionic_bond_formation_and_lattice_energy
+        name: Ionic Bond Formation and Lattice Energy
+        prerequisites: [aufbau_principle_and_electronic_configuration]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 10
+      - id: vsepr_theory_and_molecular_shapes
+        name: VSEPR Theory and Molecular Shapes
+        prerequisites: [covalent_bond_lewis_structures]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: hybridization_of_orbitals
+        name: Hybridization of Atomic Orbitals
+        prerequisites: [vsepr_theory_and_molecular_shapes]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 80
+        estimated_minutes: 15
+      - id: molecular_orbital_theory_basics
+        name: Molecular Orbital Theory — Basics
+        prerequisites: [hybridization_of_orbitals]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 12
+      - id: bond_parameters_length_angle_energy
+        name: Bond Parameters — Length, Angle, and Energy
+        prerequisites: [covalent_bond_lewis_structures]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+      - id: dipole_moment_and_polarity
+        name: Dipole Moment and Molecular Polarity
+        prerequisites: [vsepr_theory_and_molecular_shapes]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 10
+      - id: hydrogen_bonding
+        name: Hydrogen Bonding
+        prerequisites: [dipole_moment_and_polarity]
+        exam_weight: medium
+        content_sequence: [theory, example, practice]
+        mastery_threshold: 70
+        estimated_minutes: 8
+      - id: resonance_and_formal_charge
+        name: Resonance and Formal Charge
+        prerequisites: [covalent_bond_lewis_structures]
+        exam_weight: high
+        content_sequence: [theory, example, practice, pyq]
+        mastery_threshold: 75
+        estimated_minutes: 12
