@@ -8,6 +8,7 @@ from roadmap.generator import (
     generate_learning_path,
     get_next_nodes,
     get_or_generate_learning_path,
+    live_concept_ids,
     _read_concept_state_map,
 )
 from roadmap.models import LearningPath, NodeStatus, PathNode, PathProgress
@@ -26,11 +27,13 @@ from apis.cache_layer import (
 )
 
 
-def _roadmap_serializer_context(user):
+def _roadmap_serializer_context(user, subject: str = "Physics"):
     placement = getattr(user, "syllabus_placement", None)
     return {
         "placement": placement,
         "concept_states": _read_concept_state_map(user),
+        # Lets PathNodeSerializer mark nodes the tutor can't teach yet.
+        "live_concept_ids": live_concept_ids(subject),
     }
 
 
@@ -63,7 +66,7 @@ class RoadmapView(APIView):
 
                 def _fresh():
                     return LearningPathSerializer(
-                        path, context=_roadmap_serializer_context(request.user)
+                        path, context=_roadmap_serializer_context(request.user, subject)
                     ).data
 
                 payload = _fresh()
@@ -75,7 +78,7 @@ class RoadmapView(APIView):
             def _build():
                 path = get_or_generate_learning_path(request.user, subject=subject)
                 return LearningPathSerializer(
-                    path, context=_roadmap_serializer_context(request.user)
+                    path, context=_roadmap_serializer_context(request.user, subject)
                 ).data
 
             payload = get_or_set(roadmap_key(request.user, subject), TTL_ROADMAP, _build)
@@ -97,7 +100,7 @@ class RoadmapView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         return Response(
-            LearningPathSerializer(path, context=_roadmap_serializer_context(request.user)).data,
+            LearningPathSerializer(path, context=_roadmap_serializer_context(request.user, subject)).data,
             status=status.HTTP_201_CREATED,
         )
 
@@ -124,7 +127,7 @@ class RoadmapNextView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         nodes = get_next_nodes(path, limit=3)
-        ctx = _roadmap_serializer_context(request.user)
+        ctx = _roadmap_serializer_context(request.user, subject)
         return Response({"nodes": PathNodeSerializer(nodes, many=True, context=ctx).data})
 
 
@@ -196,10 +199,13 @@ class RoadmapProgressView(APIView):
             proficiency_pct=node.proficiency_pct,
         )
 
-        invalidate_user_reads(request.user)
+        # Progress is addressed by node id, not by query param — take the
+        # subject from the path the node actually belongs to.
+        node_subject = node.learning_path.subject or "Physics"
+        invalidate_user_reads(request.user, node_subject)
 
         path = LearningPath.objects.prefetch_related("nodes").get(id=node.learning_path_id)
-        ctx = _roadmap_serializer_context(request.user)
+        ctx = _roadmap_serializer_context(request.user, node_subject)
         return Response(
             {
                 "node": PathNodeSerializer(node, context=ctx).data,

@@ -7,6 +7,7 @@ from users.placement import node_proficiency_display
 class PathNodeSerializer(serializers.ModelSerializer):
     proficiency_pct = serializers.SerializerMethodField()
     proficiency_display = serializers.SerializerMethodField()
+    content_ready = serializers.SerializerMethodField()
 
     class Meta:
         model = PathNode
@@ -23,10 +24,31 @@ class PathNodeSerializer(serializers.ModelSerializer):
             "estimated_minutes",
             "proficiency_pct",
             "proficiency_display",
+            "content_ready",
             "status",
             "started_at",
             "completed_at",
         )
+
+    def get_content_ready(self, obj: PathNode) -> bool:
+        """
+        Whether the tutor can actually teach this concept yet.
+
+        The roadmap is generated from the syllabus YAML, which intentionally
+        describes more of the exam than the knowledge graph has been seeded
+        with. A node whose concept_id isn't in the live `concepts` table would
+        dead-end if a student opened it — the concept resolver would (correctly)
+        report it as outside the covered syllabus. Surfacing this lets the UI
+        show the full plan while being honest about what's teachable today,
+        instead of handing the student a button that goes nowhere.
+
+        Absent context (any caller that doesn't supply the id set) defaults to
+        True, so this can never make an already-working node look broken.
+        """
+        live_ids = self.context.get("live_concept_ids")
+        if live_ids is None:
+            return True
+        return obj.concept_id in live_ids
 
     def _state_for(self, obj: PathNode) -> dict:
         concept_states = self.context.get("concept_states") or {}

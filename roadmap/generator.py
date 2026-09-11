@@ -29,6 +29,18 @@ def _read_live_concepts(subject: str = "Physics") -> List[Dict[str, Any]]:
     return res.data or []
 
 
+def live_concept_ids(subject: str = "Physics") -> set:
+    """concept_ids the tutor actually has seeded content for, for this subject.
+
+    Used to mark roadmap nodes as teachable-or-not (see
+    PathNodeSerializer.get_content_ready). Returns an empty set when Supabase
+    is unreachable/unconfigured, which the serializer treats as "nothing is
+    ready" — deliberately conservative: better to show a student an honest
+    "not ready yet" than a button that dead-ends.
+    """
+    return {row["concept_id"] for row in _read_live_concepts(subject)}
+
+
 def _syllabus_concepts_fallback(subject: str = "Physics") -> List[Dict[str, Any]]:
     """Build concept rows from the canonical syllabus spec.
 
