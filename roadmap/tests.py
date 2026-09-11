@@ -1,6 +1,8 @@
+from unittest import mock
+
 from django.test import SimpleTestCase
 
-from roadmap.generator import topological_sort
+from roadmap.generator import live_concept_ids, topological_sort
 from roadmap.syllabus import (
     available_subjects,
     chapter_order_map,
@@ -85,3 +87,48 @@ class TopologicalSortTests(SimpleTestCase):
         ids = ["a", "b"]
         prereqs = {"a": ["b"], "b": ["a"]}
         self.assertCountEqual(topological_sort(ids, prereqs), ids)
+
+
+class TeachableConceptTests(SimpleTestCase):
+    """`content_ready` must track authored lessons, not registered concepts.
+
+    Syllabus content lands incrementally: a concept row can exist well before
+    its theory/examples/questions do. Gating on the `concepts` table alone
+    would call such a node "ready" and hand the student a button that opens
+    on an empty retrieval.
+    """
+
+    REGISTERED = [
+        {"concept_id": "has_lessons"},
+        {"concept_id": "registered_only"},
+    ]
+
+    def _client_returning(self, content_rows):
+        client = mock.MagicMock()
+        (
+            client.table.return_value.select.return_value.in_.return_value.execute.return_value
+        ) = mock.Mock(data=content_rows)
+        return client
+
+    def test_concept_without_content_is_not_teachable(self):
+        client = self._client_returning([{"primary_concept_id": "has_lessons"}])
+        with mock.patch("roadmap.generator._read_live_concepts", return_value=self.REGISTERED), \
+             mock.patch("roadmap.generator.get_supabase_client", return_value=client):
+            self.assertEqual(live_concept_ids("Physics"), {"has_lessons"})
+
+    def test_no_registered_concepts_skips_the_content_query(self):
+        client = self._client_returning([])
+        with mock.patch("roadmap.generator._read_live_concepts", return_value=[]), \
+             mock.patch("roadmap.generator.get_supabase_client", return_value=client):
+            self.assertEqual(live_concept_ids("Chemistry"), set())
+        client.table.assert_not_called()
+
+    def test_content_query_failure_falls_back_to_registered_concepts(self):
+        """A roadmap render must never fail over this check."""
+        client = mock.MagicMock()
+        client.table.side_effect = RuntimeError("supabase down")
+        with mock.patch("roadmap.generator._read_live_concepts", return_value=self.REGISTERED), \
+             mock.patch("roadmap.generator.get_supabase_client", return_value=client):
+            self.assertEqual(
+                live_concept_ids("Physics"), {"has_lessons", "registered_only"}
+            )

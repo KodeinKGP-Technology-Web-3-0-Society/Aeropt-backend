@@ -30,15 +30,45 @@ def _read_live_concepts(subject: str = "Physics") -> List[Dict[str, Any]]:
 
 
 def live_concept_ids(subject: str = "Physics") -> set:
-    """concept_ids the tutor actually has seeded content for, for this subject.
+    """concept_ids the tutor can actually teach right now, for this subject.
 
-    Used to mark roadmap nodes as teachable-or-not (see
-    PathNodeSerializer.get_content_ready). Returns an empty set when Supabase
-    is unreachable/unconfigured, which the serializer treats as "nothing is
-    ready" — deliberately conservative: better to show a student an honest
-    "not ready yet" than a button that dead-ends.
+    Used to mark roadmap nodes teachable-or-not (see
+    PathNodeSerializer.get_content_ready).
+
+    Deliberately keyed on the `content` table, not `concepts`: a concept row
+    on its own teaches nobody. Syllabus content arrives incrementally — a
+    concept can be registered before its theory/examples/questions are
+    authored — and gating on `concepts` alone would flip a node to "ready"
+    at that moment, handing the student a button that opens on an empty
+    retrieval. Gating on real content means the roadmap only promises what
+    the tutor can deliver.
+
+    Returns an empty set when Supabase is unreachable/unconfigured, which
+    the serializer shows as "not ready" — conservative on purpose.
     """
-    return {row["concept_id"] for row in _read_live_concepts(subject)}
+    concept_ids = {row["concept_id"] for row in _read_live_concepts(subject)}
+    if not concept_ids:
+        return set()
+
+    client = get_supabase_client()
+    if client is None:
+        return set()
+    try:
+        res = (
+            client.table("content")
+            .select("primary_concept_id")
+            .in_("primary_concept_id", list(concept_ids))
+            .execute()
+        )
+    except Exception:
+        # Never fail a roadmap render over this — fall back to "concept row
+        # exists", the previous behaviour.
+        return concept_ids
+    return {
+        row["primary_concept_id"]
+        for row in (res.data or [])
+        if row.get("primary_concept_id")
+    }
 
 
 def _syllabus_concepts_fallback(subject: str = "Physics") -> List[Dict[str, Any]]:
