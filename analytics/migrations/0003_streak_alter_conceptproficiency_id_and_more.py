@@ -10,7 +10,6 @@ class Migration(migrations.Migration):
     dependencies = [
         ('analytics', '0002_assessment_assessmentquestion_chapterprogress_and_more'),
         ('apis', '0001_initial'),
-        ('chatbot', '0002_conversationmessage_messageconcept_studysession_and_more'),
         ('users', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -128,11 +127,6 @@ class Migration(migrations.Migration):
             model_name='questionattempt',
             name='content_item',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='question_attempts', to='apis.contentitem'),
-        ),
-        migrations.AddField(
-            model_name='questionattempt',
-            name='study_session',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='question_attempts', to='chatbot.studysession'),
         ),
         migrations.AddField(
             model_name='questionattempt',

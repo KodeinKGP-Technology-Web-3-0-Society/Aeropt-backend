@@ -29,7 +29,7 @@ class IsOwnerOrAdmin(BasePermission):
 
 
 def get_default_permission_classes():
-    if getattr(settings, "CHATBOT_AUTH_DISABLED", False):
+    if getattr(settings, "DEV_AUTH_BYPASS", False):
         from rest_framework.permissions import AllowAny
 
         return [AllowAny]

@@ -22,11 +22,11 @@ class _SessionMixin:
         if request.user and request.user.is_authenticated:
             return request.user
 
-        if not getattr(settings, "CHATBOT_AUTH_DISABLED", False):
+        if not getattr(settings, "DEV_AUTH_BYPASS", False):
             raise NotAuthenticated("Authentication credentials were not provided.")
 
         User = get_user_model()
-        email = getattr(settings, "CHATBOT_DEV_EMAIL", "chatbot-dev@local.test")
+        email = getattr(settings, "DEV_AUTH_BYPASS_EMAIL", "chatbot-dev@local.test")
         dev_user, _ = User.objects.get_or_create(
             email=email,
             defaults={"full_name": "Chatbot Dev", "is_active": True},
@@ -35,7 +35,7 @@ class _SessionMixin:
 
 
 class DashboardView(APIView, _SessionMixin):
-    permission_classes = (AllowAny if getattr(settings, "CHATBOT_AUTH_DISABLED", False) else IsAuthenticated,)
+    permission_classes = (AllowAny if getattr(settings, "DEV_AUTH_BYPASS", False) else IsAuthenticated,)
 
     def get(self, request):
         user = self._get_actor_user(request)
@@ -72,7 +72,7 @@ class DashboardView(APIView, _SessionMixin):
 
 
 class ProgressView(APIView, _SessionMixin):
-    permission_classes = (AllowAny if getattr(settings, "CHATBOT_AUTH_DISABLED", False) else IsAuthenticated,)
+    permission_classes = (AllowAny if getattr(settings, "DEV_AUTH_BYPASS", False) else IsAuthenticated,)
 
     def get(self, request):
         user = self._get_actor_user(request)
@@ -218,7 +218,7 @@ class AssessmentQuestionViewSet(BaseModelViewSet):
         queryset = super().get_queryset()
         user = self.request.user
         if not user.is_authenticated:
-            if getattr(settings, "CHATBOT_AUTH_DISABLED", False):
+            if getattr(settings, "DEV_AUTH_BYPASS", False):
                 return queryset
             return queryset.none()
         if user.is_staff:

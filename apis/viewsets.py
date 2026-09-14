@@ -13,11 +13,11 @@ class ActorMixin:
         if request.user and request.user.is_authenticated:
             return request.user
 
-        if not getattr(settings, "CHATBOT_AUTH_DISABLED", False):
+        if not getattr(settings, "DEV_AUTH_BYPASS", False):
             raise NotAuthenticated("Authentication credentials were not provided.")
 
         User = get_user_model()
-        email = getattr(settings, "CHATBOT_DEV_EMAIL", "chatbot-dev@local.test")
+        email = getattr(settings, "DEV_AUTH_BYPASS_EMAIL", "chatbot-dev@local.test")
         dev_user, _ = User.objects.get_or_create(
             email=email,
             defaults={"full_name": "Chatbot Dev", "is_active": True},
@@ -26,7 +26,7 @@ class ActorMixin:
 
 
 def get_permission_classes():
-    if getattr(settings, "CHATBOT_AUTH_DISABLED", False):
+    if getattr(settings, "DEV_AUTH_BYPASS", False):
         return [AllowAny]
     return [IsAuthenticated]
 
@@ -39,7 +39,7 @@ class UserScopedViewSet(ActorMixin, BaseModelViewSet):
     owner_field = "user"
 
     def get_permissions(self):
-        if getattr(settings, "CHATBOT_AUTH_DISABLED", False):
+        if getattr(settings, "DEV_AUTH_BYPASS", False):
             return [AllowAny()]
         if self.action in ("create", "update", "partial_update", "destroy"):
             return [IsAuthenticated(), IsOwnerOrAdmin()]

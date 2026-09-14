@@ -62,7 +62,6 @@ INSTALLED_APPS = [
     # Prepwise apps
     'users',       # custom User model, StudentProfile, JWT auth endpoints
     'apis',        # content catalog + DRF config hub
-    'chatbot',     # study sessions, chat messages, LLM integration, concept snapshots
     'analytics',   # concept proficiency, streaks, practice attempts, dashboard/progress data
     'roadmap',     # personal learning path generator (Phase 2)
     'sandbox',     # proactive action queue + readiness (Phase 3)
@@ -228,9 +227,9 @@ CHATBOT_MAX_TOKENS = int(os.getenv("CHATBOT_MAX_TOKENS", "1000"))
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 
-CHATBOT_AUTH_DISABLED = os.getenv("CHATBOT_AUTH_DISABLED", "false").strip().lower() in ("1", "true", "yes", "on")
-CHATBOT_DEV_USERNAME = os.getenv("CHATBOT_DEV_USERNAME", "chatbot-dev")
-CHATBOT_DEV_EMAIL = os.getenv("CHATBOT_DEV_EMAIL", "chatbot-dev@local.test")
+DEV_AUTH_BYPASS = os.getenv("DEV_AUTH_BYPASS", "false").strip().lower() in ("1", "true", "yes", "on")
+DEV_AUTH_BYPASS_USERNAME = os.getenv("DEV_AUTH_BYPASS_USERNAME", "chatbot-dev")
+DEV_AUTH_BYPASS_EMAIL = os.getenv("DEV_AUTH_BYPASS_EMAIL", "chatbot-dev@local.test")
 
 CORS_ALLOWED_ORIGINS = [
     origin.strip()

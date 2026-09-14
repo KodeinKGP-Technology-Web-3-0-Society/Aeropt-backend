@@ -305,13 +305,6 @@ class QuestionAttempt(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="question_attempts")
     content_item = models.ForeignKey("apis.ContentItem", on_delete=models.CASCADE, related_name="question_attempts")
-    study_session = models.ForeignKey(
-        "chatbot.StudySession",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="question_attempts",
-    )
     submitted_answer = models.JSONField(default=dict, blank=True)
     is_correct = models.BooleanField()
     error_type = models.CharField(max_length=30, choices=ErrorType.choices, blank=True, default="")
