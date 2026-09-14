@@ -17,7 +17,7 @@ _MOCK_CONCEPTS = [
 @patch("users.placement_planner._practice_concept_ids", return_value={"newtons_2nd_law_f__ma", "torque"})
 @patch("users.placement_planner._read_live_concepts", return_value=_MOCK_CONCEPTS)
 class PlacementPlannerTests(TestCase):
-    def test_mid_journey_skips_probes_when_chapters_covered(self, _mock_concepts, _mock_practice):
+    def test_mid_journey_probes_covered_chapters(self, _mock_concepts, _mock_practice):
         plan = build_placement_plan(
             journey_type=JourneyType.MID_JOURNEY,
             covered_chapters=["Laws of Motion", "Rotational Motion"],
@@ -26,21 +26,20 @@ class PlacementPlannerTests(TestCase):
                 "Rotational Motion": "barely",
             },
         )
-        self.assertEqual(plan["total_probes"], 0)
-        self.assertEqual(plan["probes"], [])
-        self.assertIn("Laws of Motion", plan["skipped_chapters"])
-        self.assertIn("Rotational Motion", plan["skipped_chapters"])
+        self.assertEqual(plan["total_probes"], 2)
+        self.assertEqual(len(plan["probes"]), 2)
+        self.assertIn("Work Energy & Power", plan["skipped_chapters"])
 
-    def test_revision_dropper_skips_probes_when_chapters_covered(self, _mock_concepts, _mock_practice):
-        covered = [f"Chapter {i}" for i in range(8)]
+    def test_revision_dropper_probes_covered_chapters(self, _mock_concepts, _mock_practice):
+        covered = ["Laws of Motion", "Rotational Motion", "Work Energy & Power"]
         depth = {ch: "moderate" for ch in covered}
         plan = build_placement_plan(
             journey_type=JourneyType.REVISION_DROPPER,
             covered_chapters=covered,
             self_assessed_coverage=depth,
         )
-        self.assertEqual(plan["total_probes"], 0)
-        self.assertEqual(len(plan["skipped_chapters"]), 8)
+        self.assertEqual(plan["total_probes"], 3)
+        self.assertEqual(len(plan["skipped_chapters"]), 0)
 
     def test_fresh_start_limits_to_two_probes(self, _mock_concepts, _mock_practice):
         plan = build_placement_plan(

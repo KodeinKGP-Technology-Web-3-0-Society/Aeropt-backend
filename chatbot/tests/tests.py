@@ -11,7 +11,7 @@ from chatbot.models import ChatMessage, ChatSession, ConceptSnapshot
 class ChatbotApiTests(APITestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            username="chat-user",
+            email="chat-user@example.com",
             password="chat-pass-123",
         )
         self.client.force_authenticate(self.user)

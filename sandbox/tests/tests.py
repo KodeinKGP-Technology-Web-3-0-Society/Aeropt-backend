@@ -72,6 +72,7 @@ class QueueMetaTests(TestCase):
         profile.daily_goal_minutes = 75
         profile.preferred_depth = "quick"
         profile.save(update_fields=["daily_goal_minutes", "preferred_depth"])
+        user.student_profile.refresh_from_db()
 
         meta = build_queue_meta(user)
         self.assertEqual(meta["daily_goal_minutes"], 75)

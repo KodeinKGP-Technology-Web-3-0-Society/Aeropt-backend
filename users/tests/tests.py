@@ -61,7 +61,7 @@ class PlacementSeedingTests(TestCase):
             is_cold_start=False,
         )
         self.assertEqual(pct, 65)
-        self.assertEqual(label, "strong")
+        self.assertEqual(label, "almost_mastered")
 
 
 class OnboardingMilestoneApiTests(APITestCase):
