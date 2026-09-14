@@ -6,27 +6,17 @@ from analytics.views import (
     AssessmentViewSet,
     ChapterProgressViewSet,
     ConceptMasteryViewSet,
-    ConceptProficiencyViewSet,
     DailyActivityViewSet,
-    DailyProficiencySnapshotViewSet,
     DashboardView,
     LearningGapViewSet,
-    PracticeAttemptViewSet,
     ProficiencySnapshotViewSet,
     ProgressView,
     QuestionAttemptViewSet,
     RecommendationViewSet,
     StreakViewSet,
-    StudyStreakLegacyViewSet,
-    WeeklyImprovementViewSet,
 )
 
 router = DefaultRouter()
-router.register(r"concept-proficiencies", ConceptProficiencyViewSet, basename="concept-proficiency")
-router.register(r"study-streaks", StudyStreakLegacyViewSet, basename="study-streak-legacy")
-router.register(r"daily-proficiency-snapshots", DailyProficiencySnapshotViewSet, basename="daily-proficiency-snapshot")
-router.register(r"practice-attempts", PracticeAttemptViewSet, basename="practice-attempt")
-router.register(r"weekly-improvements", WeeklyImprovementViewSet, basename="weekly-improvement")
 router.register(r"concept-masteries", ConceptMasteryViewSet, basename="concept-mastery")
 router.register(r"chapter-progress", ChapterProgressViewSet, basename="chapter-progress")
 router.register(r"proficiency-snapshots", ProficiencySnapshotViewSet, basename="proficiency-snapshot")

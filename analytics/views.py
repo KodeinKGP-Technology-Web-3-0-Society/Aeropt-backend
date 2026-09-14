@@ -114,73 +114,35 @@ from analytics.models import (
     AssessmentQuestion,
     ChapterProgress,
     ConceptMastery,
-    ConceptProficiency,
     DailyActivity,
-    DailyProficiencySnapshot,
     LearningGap,
-    PracticeAttempt,
     ProficiencySnapshot,
     QuestionAttempt,
     Recommendation,
     Streak,
-    StudyStreak,
-    WeeklyImprovement,
 )
 from analytics.serializers import (
     AssessmentQuestionSerializer,
     AssessmentSerializer,
     ChapterProgressSerializer,
     ConceptMasterySerializer,
-    ConceptProficiencySerializer,
     DailyActivitySerializer,
-    DailyProficiencySnapshotSerializer,
     LearningGapSerializer,
-    PracticeAttemptSerializer,
     ProficiencySnapshotSerializer,
     QuestionAttemptSerializer,
     RecommendationSerializer,
     StreakSerializer,
-    StudyStreakSerializer,
-    WeeklyImprovementSerializer,
 )
 
 
-class ConceptProficiencyViewSet(UserScopedViewSet):
-    queryset = ConceptProficiency.objects.select_related("user").all()
-    serializer_class = ConceptProficiencySerializer
-    filterset_fields = ("chapter", "trend", "user")
-    search_fields = ("concept_name", "chapter")
-    ordering_fields = ("score", "last_attempted", "attempts")
 
 
-class StudyStreakLegacyViewSet(UserScopedViewSet):
-    queryset = StudyStreak.objects.select_related("user").all()
-    serializer_class = StudyStreakSerializer
-    filterset_fields = ("user",)
-    ordering_fields = ("current_streak", "longest_streak")
 
 
-class DailyProficiencySnapshotViewSet(UserScopedViewSet):
-    queryset = DailyProficiencySnapshot.objects.select_related("user").all()
-    serializer_class = DailyProficiencySnapshotSerializer
-    filterset_fields = ("chapter", "date", "user")
-    ordering_fields = ("date", "avg_score")
 
 
-class PracticeAttemptViewSet(UserScopedViewSet):
-    queryset = PracticeAttempt.objects.select_related("user").all()
-    serializer_class = PracticeAttemptSerializer
-    filterset_fields = ("chapter", "question_type", "is_correct", "mistake_type", "user")
-    search_fields = ("concept_name", "chapter", "question_id")
-    ordering_fields = ("attempted_at", "difficulty")
 
 
-class WeeklyImprovementViewSet(UserScopedViewSet):
-    queryset = WeeklyImprovement.objects.select_related("user").all()
-    serializer_class = WeeklyImprovementSerializer
-    filterset_fields = ("week_start", "user")
-    search_fields = ("concept_name",)
-    ordering_fields = ("week_start", "delta")
 
 
 class ConceptMasteryViewSet(UserScopedViewSet):

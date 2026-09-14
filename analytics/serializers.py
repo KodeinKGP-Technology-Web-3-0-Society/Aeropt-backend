@@ -6,85 +6,24 @@ from analytics.models import (
     AssessmentQuestion,
     ChapterProgress,
     ConceptMastery,
-    ConceptProficiency,
     DailyActivity,
-    DailyProficiencySnapshot,
     LearningGap,
-    PracticeAttempt,
     ProficiencySnapshot,
     QuestionAttempt,
     Recommendation,
     Streak,
-    StudyStreak,
-    WeeklyImprovement,
 )
 from apis.serializers import ChapterSerializer, ConceptSerializer, ContentItemSerializer, SubjectSerializer
 
 
-class ConceptProficiencySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ConceptProficiency
-        fields = (
-            "id",
-            "user",
-            "concept_name",
-            "chapter",
-            "score",
-            "attempts",
-            "correct_attempts",
-            "last_attempted",
-            "trend",
-        )
-        read_only_fields = ("id", "last_attempted", "user")
 
 
-class StudyStreakSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StudyStreak
-        fields = ("id", "user", "current_streak", "longest_streak", "last_study_date")
-        read_only_fields = ("id", "user")
 
 
-class DailyProficiencySnapshotSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DailyProficiencySnapshot
-        fields = ("id", "user", "chapter", "date", "avg_score")
-        read_only_fields = ("id", "user")
 
 
-class PracticeAttemptSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PracticeAttempt
-        fields = (
-            "id",
-            "user",
-            "concept_name",
-            "chapter",
-            "question_id",
-            "question_type",
-            "difficulty",
-            "selected_answer",
-            "is_correct",
-            "time_taken_secs",
-            "mistake_type",
-            "attempted_at",
-        )
-        read_only_fields = ("id", "attempted_at", "user")
 
 
-class WeeklyImprovementSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = WeeklyImprovement
-        fields = (
-            "id",
-            "user",
-            "concept_name",
-            "score_7d_ago",
-            "score_now",
-            "delta",
-            "week_start",
-        )
-        read_only_fields = ("id", "user")
 
 
 class ConceptMasterySerializer(serializers.ModelSerializer):
