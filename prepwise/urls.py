@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -23,5 +24,9 @@ urlpatterns = [
     # All /api/v1/ routes flow through apis/urls.py (the central router).
     # apis/urls.py then delegates to each app's urls.py.
     # Uncomment once apis/views.py has HealthCheckView implemented:
+    # Swagger docs
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+
     path('api/v1/', include('apis.urls')),
 ]
