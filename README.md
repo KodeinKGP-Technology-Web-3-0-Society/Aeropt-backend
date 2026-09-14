@@ -280,7 +280,13 @@ All API routes are versioned under `/api/v1/`.
 | `GET` | `/api/v1/analytics/dashboard/` | `analytics` | Aggregated dashboard stats (streak, mastery %, goals). |
 | `GET` | `/api/v1/analytics/progress/` | `analytics` | Detailed concept-by-concept mastery timeline. |
 | `GET` | `/api/v1/concepts/` | `apis` | Catalog of 33 Physics concepts with prerequisites. |
-
+| `GET` | `/api/v1/subjects/` | `apis` | Catalog of subjects (e.g., Physics). |
+| `GET` | `/api/v1/chapters/` | `apis` | Catalog of chapters for the syllabus. |
+| `GET` | `/api/v1/concept-prerequisites/` | `apis` | Defines prerequisite relationships between concepts. |
+| `GET` | `/api/v1/content-items/` | `apis` | Practice questions, slides, and learning content. |
+| `GET` | `/api/v1/content-secondary-concepts/` | `apis` | Maps content to secondary associated concepts. |
+| `GET` | `/api/v1/content-flags/` | `apis` | User-reported errors/flags on content items. |
+| `GET/PUT` | `/api/v1/users/` | `users` | User management endpoints. |
 ---
 
 ## Local Setup & Verification
