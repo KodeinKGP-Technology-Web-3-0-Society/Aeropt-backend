@@ -19,6 +19,7 @@ env/
 
 # Django
 db.sqlite3
+.ci.sqlite3
 *.log
 /static/
 /media/
@@ -35,6 +36,8 @@ db.sqlite3
 # Celery
 celerybeat-schedule
 celerybeat.pid
+
+.local-run/
 
 /bruno
 /scripts
