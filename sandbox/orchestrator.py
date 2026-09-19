@@ -46,6 +46,39 @@ def _preferred_depth(user) -> str:
     return str(getattr(profile, "preferred_depth", None) or "standard")
 
 
+def _decisions_today(user) -> Dict[str, str]:
+    """{canonical action key: status} for the cards acted on today.
+
+    Returns {} on any failure — a queue that shows an extra card is a much
+    smaller problem than a queue that fails to render.
+    """
+    try:
+        from django.utils import timezone
+
+        from sandbox.models import SandboxActionEvent
+
+        rows = SandboxActionEvent.objects.filter(
+            user=user, for_date=timezone.localdate()
+        ).values_list("target_key", "status")
+        return {target_key: status for target_key, status in rows}
+    except Exception:
+        logger.exception("Failed to read sandbox decisions for user %s", getattr(user, "pk", user))
+        return {}
+
+
+def _drop_decided(queue: List[Dict[str, Any]], decided: Dict[str, str]) -> List[Dict[str, Any]]:
+    """Remove cards the student already acted on, keyed independently of position."""
+    if not decided:
+        return queue
+    from sandbox.models import canonical_action_key
+
+    return [
+        item
+        for item in queue
+        if canonical_action_key(str(item.get("id") or "")) not in decided
+    ]
+
+
 def _pack_queue_to_goal(queue: List[Dict[str, Any]], daily_goal: int) -> List[Dict[str, Any]]:
     """Scale / trim / pad the queue so total minutes ≈ min(daily_goal, 60)."""
     if not queue:
@@ -100,6 +133,10 @@ def build_action_queue(user) -> List[Dict[str, Any]]:
     if not current:
         return queue
 
+    # Cards the student completed or dismissed today are gone for today. This is
+    # read before building so the budget packer works on what is actually left.
+    decided = _decisions_today(user)
+
     action_map = {
         "learn": "LEARN",
         "revise": "REVISE",
@@ -150,13 +187,22 @@ def build_action_queue(user) -> List[Dict[str, Any]]:
     except Exception:
         logger.exception("Failed to retrieve next roadmap nodes for user %s", getattr(user, "pk", user))
 
-    return _pack_queue_to_goal(queue, daily_goal)
+    queue = _drop_decided(queue, decided)
+    if not queue:
+        return queue
+
+    # Packing can append `practice-slice`, so filter once more afterwards.
+    return _drop_decided(_pack_queue_to_goal(queue, daily_goal), decided)
 
 
 def build_queue_meta(user) -> Dict[str, Any]:
     daily = _daily_goal_minutes(user)
+    decided = _decisions_today(user)
+    statuses = list(decided.values())
     return {
         "daily_goal_minutes": daily,
         "preferred_depth": _preferred_depth(user),
         "queue_target_minutes": min(max(daily, 15), 60),
+        "completed_today": statuses.count("completed"),
+        "dismissed_today": statuses.count("dismissed"),
     }

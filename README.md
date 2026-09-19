@@ -42,10 +42,16 @@ All student routes sit under `/api/v1/`. Schema UI: `/api/docs/`.
 | GET | `/api/v1/roadmap/`, `/roadmap/subjects/`, `/roadmap/progress/` |
 | POST | `/api/v1/roadmap/next/` |
 | GET | `/api/v1/sandbox/queue/`, `/sandbox/readiness/` |
+| POST | `/api/v1/sandbox/queue/<action_id>/complete/`, `/dismiss/` |
 | GET | `/api/v1/analytics/dashboard/`, `/analytics/progress/` |
+| GET | `/api/v1/analytics/chat-history/` (`page`, `page_size`, `subject`), `/analytics/chat-history/<session_id>/` |
 | GET | `/api/v1/subjects/`, `/chapters/`, `/concepts/`, `/content-items/` |
 
 There is no Django chatbot. That app is gone.
+
+**Chat history** is read from the agent's `public.sessions` / `chat_turns` through Supabase; Django never writes it. Both routes return `503` with a readable `detail` when Supabase is not configured or the account is not yet linked, and the detail route returns `404` for a session that does not exist *or* is not the caller's, so it cannot be used to probe other students' session ids.
+
+**Sandbox decisions** (`complete` / `dismiss`) are stored one row per `(user, card, day)` in `sandbox_action_events`, so repeating a POST is a harmless no-op that reports `already_recorded: true`. Queue ids carry a position prefix (`focus-` / `next-`) that shifts as the student works; the server strips it, so clients post the id exactly as received. The response includes the rebuilt queue, so a client needs no follow-up GET.
 
 ## Run
 

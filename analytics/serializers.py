@@ -161,7 +161,6 @@ class QuestionAttemptSerializer(serializers.ModelSerializer):
             "user",
             "content_item",
             "content_item_id",
-            "study_session",
             "submitted_answer",
             "is_correct",
             "error_type",
@@ -263,3 +262,57 @@ class AssessmentQuestionSerializer(serializers.ModelSerializer):
             "answered_at",
         )
         read_only_fields = ("id",)
+
+
+# --- Chat history (read models over Supabase `sessions` / `chat_turns`) -------
+# These are plain Serializers, not ModelSerializers: the agent owns these tables
+# in the `public` schema and Django has no ORM model for them. They exist so
+# /api/schema/ documents the shape rather than an opaque object.
+
+
+class ChatHistorySessionSerializer(serializers.Serializer):
+    session_id = serializers.CharField()
+    session_type = serializers.CharField(allow_null=True)
+    started_at = serializers.DateTimeField(allow_null=True)
+    ended_at = serializers.DateTimeField(allow_null=True)
+    duration_seconds = serializers.IntegerField()
+    concepts_touched = serializers.ListField(child=serializers.CharField(), allow_empty=True)
+    summary = serializers.CharField(allow_blank=True)
+    last_decision = serializers.CharField(allow_null=True)
+    turn_count = serializers.IntegerField()
+
+
+class ChatHistoryListSerializer(serializers.Serializer):
+    sessions = ChatHistorySessionSerializer(many=True)
+    total = serializers.IntegerField()
+    page = serializers.IntegerField()
+    page_size = serializers.IntegerField()
+    has_next = serializers.BooleanField()
+
+
+class ChatHistoryTurnSerializer(serializers.Serializer):
+    turn_id = serializers.CharField()
+    role = serializers.CharField(allow_null=True)
+    content = serializers.CharField(allow_blank=True)
+    turn_index = serializers.IntegerField(allow_null=True)
+    is_summarized = serializers.BooleanField()
+    concepts_referenced = serializers.ListField(child=serializers.CharField(), allow_empty=True)
+    agent_used = serializers.CharField(allow_null=True)
+    created_at = serializers.DateTimeField(allow_null=True)
+    decision = serializers.CharField(allow_null=True)
+    content_ids_served = serializers.ListField(child=serializers.CharField(), allow_empty=True)
+    # The agent writes these as JSON blobs, not strings.
+    presentation = serializers.JSONField(allow_null=True, required=False)
+    student_feedback = serializers.JSONField(allow_null=True, required=False)
+
+
+class ChatHistoryDetailSerializer(serializers.Serializer):
+    session_id = serializers.CharField()
+    session_type = serializers.CharField(allow_null=True)
+    started_at = serializers.DateTimeField(allow_null=True)
+    ended_at = serializers.DateTimeField(allow_null=True)
+    duration_seconds = serializers.IntegerField()
+    summary = serializers.CharField(allow_blank=True)
+    last_decision = serializers.CharField(allow_null=True)
+    concepts_touched = serializers.ListField(child=serializers.CharField(), allow_empty=True)
+    turns = ChatHistoryTurnSerializer(many=True)

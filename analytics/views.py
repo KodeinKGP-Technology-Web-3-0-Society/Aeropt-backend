@@ -1,10 +1,29 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import NotAuthenticated
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 
+from analytics.cache_keys import (
+    TTL_CHAT_HISTORY,
+    TTL_CHAT_HISTORY_DETAIL,
+    chat_history_detail_key,
+    chat_history_key,
+)
+from analytics.serializers import (
+    ChatHistoryDetailSerializer,
+    ChatHistoryListSerializer,
+)
+from analytics.supabase_chat_history import (
+    DEFAULT_PAGE_SIZE,
+    MAX_PAGE_SIZE,
+    build_chat_history_detail,
+    build_chat_history_list,
+)
 from analytics.supabase_dashboard import build_dashboard_from_supabase
 from analytics.supabase_progress import build_progress_from_supabase
 from apis.cache_layer import (
@@ -16,6 +35,8 @@ from apis.cache_layer import (
 )
 from users.models import SyllabusPlacement
 from users.supabase_sync import ensure_supabase_user, is_supabase_configured
+
+logger = logging.getLogger(__name__)
 
 class _SessionMixin:
     def _get_actor_user(self, request):
@@ -108,6 +129,107 @@ class ProgressView(APIView, _SessionMixin):
         )
 
 
+class _SupabaseReadView(APIView, _SessionMixin):
+    """Shared preamble for the Supabase-backed read endpoints.
+
+    Returns (user, supabase_user_id, error_response). CI and any unconfigured
+    environment take the error path with a 503 and a readable `detail`, never a
+    500 out of the Supabase client.
+    """
+
+    permission_classes = (AllowAny if getattr(settings, "DEV_AUTH_BYPASS", False) else IsAuthenticated,)
+
+    def _resolve(self, request):
+        user = self._get_actor_user(request)
+        supabase_user_id = ensure_supabase_user(user)
+        if not is_supabase_configured():
+            return user, None, Response(
+                {"detail": "Supabase is not configured. Set SUPABASE_URL and SUPABASE_KEY in .env."},
+                status=503,
+            )
+        if not supabase_user_id:
+            return user, None, Response(
+                {"detail": "Could not link your account to Supabase. Sign out and sign in again."},
+                status=503,
+            )
+        return user, supabase_user_id, None
+
+
+class ChatHistoryListView(_SupabaseReadView):
+    """Paginated list of a student's past tutoring sessions."""
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("page", int, description="1-based page number (default 1)."),
+            OpenApiParameter(
+                "page_size",
+                int,
+                description=f"Sessions per page (default {DEFAULT_PAGE_SIZE}, max {MAX_PAGE_SIZE}).",
+            ),
+            OpenApiParameter("subject", str, description="Optional subject filter."),
+        ],
+        responses={200: ChatHistoryListSerializer},
+        operation_id="analytics_chat_history_list",
+    )
+    def get(self, request):
+        user, supabase_user_id, error = self._resolve(request)
+        if error is not None:
+            return error
+
+        try:
+            page = max(1, int(request.query_params.get("page", 1)))
+        except (TypeError, ValueError):
+            page = 1
+        try:
+            page_size = int(request.query_params.get("page_size", DEFAULT_PAGE_SIZE))
+        except (TypeError, ValueError):
+            page_size = DEFAULT_PAGE_SIZE
+        page_size = max(1, min(page_size, MAX_PAGE_SIZE))
+        subject = (request.query_params.get("subject") or "").strip() or None
+
+        payload = get_or_set(
+            chat_history_key(user, page, page_size, subject or ""),
+            TTL_CHAT_HISTORY,
+            lambda: build_chat_history_list(
+                supabase_user_id,
+                page=page,
+                page_size=page_size,
+                subject_filter=subject,
+            ),
+        )
+        if payload is None:
+            logger.warning("Chat history unavailable for user %s", user.pk)
+            return Response(
+                {"detail": "Chat history is temporarily unavailable."},
+                status=503,
+            )
+        return Response(payload)
+
+
+class ChatHistoryDetailView(_SupabaseReadView):
+    """Full turn-by-turn transcript of one session, scoped to its owner."""
+
+    @extend_schema(
+        responses={200: ChatHistoryDetailSerializer},
+        operation_id="analytics_chat_history_retrieve",
+    )
+    def get(self, request, session_id: str):
+        user, supabase_user_id, error = self._resolve(request)
+        if error is not None:
+            return error
+
+        payload = get_or_set(
+            chat_history_detail_key(user, session_id),
+            TTL_CHAT_HISTORY_DETAIL,
+            lambda: build_chat_history_detail(supabase_user_id, session_id),
+        )
+        if payload is None:
+            # build_chat_history_detail filters on user_id, so "no row" means
+            # either no such session or not this student's — same answer either way.
+            return Response({"detail": "Session not found."}, status=404)
+        return Response(payload)
+
+
 from apis.viewsets import BaseModelViewSet, UserPrimaryKeyViewSet, UserScopedViewSet
 from analytics.models import (
     Assessment,
@@ -182,9 +304,12 @@ class RecommendationViewSet(UserScopedViewSet):
 
 
 class QuestionAttemptViewSet(UserScopedViewSet):
-    queryset = QuestionAttempt.objects.select_related("user", "content_item", "study_session").all()
+    # `study_session` used to appear here and in the serializer, but no such
+    # field (or model) exists on QuestionAttempt — it made every request to this
+    # viewset, and all of /api/schema/, raise TypeError from django-filter.
+    queryset = QuestionAttempt.objects.select_related("user", "content_item").all()
     serializer_class = QuestionAttemptSerializer
-    filterset_fields = ("is_correct", "error_type", "user", "content_item", "study_session")
+    filterset_fields = ("is_correct", "error_type", "user", "content_item")
     ordering_fields = ("attempted_at", "attempt_number")
 
 

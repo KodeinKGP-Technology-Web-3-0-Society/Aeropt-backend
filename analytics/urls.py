@@ -5,6 +5,8 @@ from analytics.views import (
     AssessmentQuestionViewSet,
     AssessmentViewSet,
     ChapterProgressViewSet,
+    ChatHistoryDetailView,
+    ChatHistoryListView,
     ConceptMasteryViewSet,
     DailyActivityViewSet,
     DashboardView,
@@ -31,4 +33,10 @@ router.register(r"assessment-questions", AssessmentQuestionViewSet, basename="as
 urlpatterns = [
     path("dashboard/", DashboardView.as_view(), name="analytics-dashboard"),
     path("progress/", ProgressView.as_view(), name="analytics-progress"),
+    path("chat-history/", ChatHistoryListView.as_view(), name="analytics-chat-history"),
+    path(
+        "chat-history/<str:session_id>/",
+        ChatHistoryDetailView.as_view(),
+        name="analytics-chat-history-detail",
+    ),
 ] + router.urls
