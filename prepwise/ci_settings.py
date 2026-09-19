@@ -27,3 +27,26 @@ DATABASES = {
 
 SUPABASE_URL = ""
 SUPABASE_KEY = ""
+
+# CI relaxes two production policies, unless CI_HARDENING_LIVE=1. Set that flag
+# to run a throwaway sqlite server with the real logging/throttling policy:
+#   CI_HARDENING_LIVE=1 DJANGO_SETTINGS_MODULE=prepwise.ci_settings \
+#       python manage.py runserver 8011 --noreload
+if os.getenv("CI_HARDENING_LIVE", "").strip().lower() not in ("1", "true", "yes", "on"):
+    # Throttling off: the suite fires hundreds of requests from one IP and a
+    # handful of users within seconds, which is exactly what the limits exist to
+    # stop. prepwise/tests_hardening.py re-enables them per test, so the policy
+    # itself is still covered.
+    REST_FRAMEWORK = {
+        **REST_FRAMEWORK,
+        "DEFAULT_THROTTLE_RATES": {"auth": None, "anon": None, "user": None},
+    }
+
+    # Keep CI output readable: no per-request access lines.
+    LOGGING = {
+        **LOGGING,
+        "root": {**LOGGING["root"], "level": "WARNING"},
+        "loggers": {
+            name: {**cfg, "level": "WARNING"} for name, cfg in LOGGING["loggers"].items()
+        },
+    }

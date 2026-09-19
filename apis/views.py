@@ -1,3 +1,9 @@
+import logging
+
+from django.conf import settings
+from django.db import connections
+from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -24,12 +30,67 @@ from apis.serializers import (
 from apis.viewsets import BaseModelViewSet, UserScopedViewSet
 
 
-class HealthCheckView(APIView):
-    permission_classes = (AllowAny,)
+logger = logging.getLogger(__name__)
 
+API_VERSION = "1.0.0"
+
+
+class HealthCheckView(APIView):
+    """Liveness + shallow dependency check for load balancers.
+
+    Deliberately cheap: one `SELECT 1` against the default database and a
+    config-only look at the Supabase credentials. It never performs a Supabase
+    round trip — that would put a network hop on every load-balancer probe.
+
+    200 when the database answers, 503 when it does not. Never throttled.
+    """
+
+    permission_classes = (AllowAny,)
+    authentication_classes = ()
+    throttle_classes = ()
+
+    @extend_schema(
+        responses={200: HealthCheckSerializer, 503: HealthCheckSerializer},
+        description=(
+            "Liveness probe. Reports API version, the request id, a `SELECT 1` "
+            "database ping and whether Supabase credentials are configured. "
+            "503 when the database ping fails."
+        ),
+    )
     def get(self, request):
-        data = HealthCheckSerializer({"status": "ok", "version": "1.0.0"}).data
-        return Response(data)
+        db_ok, db_detail = self._check_database()
+        supabase_configured = bool(
+            getattr(settings, "SUPABASE_URL", "") and getattr(settings, "SUPABASE_KEY", "")
+        )
+
+        payload = {
+            **HealthCheckSerializer(
+                {"status": "ok" if db_ok else "degraded", "version": API_VERSION}
+            ).data,
+            "request_id": getattr(request, "request_id", None),
+            "checks": {
+                "database": {"status": "ok" if db_ok else "error", "detail": db_detail},
+                # Configured-ness only; no live call.
+                "supabase": {
+                    "status": "configured" if supabase_configured else "unconfigured"
+                },
+            },
+        }
+
+        if not db_ok:
+            logger.error("health check failed: database unreachable (%s)", db_detail)
+            return Response(payload, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return Response(payload)
+
+    @staticmethod
+    def _check_database():
+        try:
+            with connections["default"].cursor() as cursor:
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+        except Exception as exc:  # a health probe must never itself 500
+            return False, type(exc).__name__
+        return True, None
 
 
 class SubjectViewSet(BaseModelViewSet):

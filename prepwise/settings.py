@@ -10,10 +10,16 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import importlib.util
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
+
+
+def _env_flag(name: str, default: str = "False") -> bool:
+    return os.getenv(name, default).strip().lower() in ("1", "true", "yes", "on")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,7 +35,7 @@ if not SECRET_KEY:
     raise ImproperlyConfigured("The SECRET_KEY environment variable is missing.")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False").strip().lower() in ("1", "true", "yes", "on")
+DEBUG = _env_flag("DEBUG")
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -71,6 +77,8 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
+    # First: every log line emitted downstream should carry the request id.
+    'prepwise.middleware.RequestIDMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -80,6 +88,19 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Serve collected static files (admin CSS, Swagger assets) straight from the
+# container when WhiteNoise is installed. It is in requirements.txt for the
+# deploy image; a dev venv that predates it keeps working without it.
+if importlib.util.find_spec("whitenoise") is not None:
+    MIDDLEWARE.insert(
+        MIDDLEWARE.index('django.middleware.security.SecurityMiddleware') + 1,
+        'whitenoise.middleware.WhiteNoiseMiddleware',
+    )
+
+# X_FRAME_OPTIONS defaults to "DENY" via XFrameOptionsMiddleware above and
+# nothing embeds this API in a frame — stated explicitly so it is not lost.
+X_FRAME_OPTIONS = 'DENY'
 
 ROOT_URLCONF = 'prepwise.urls'
 
@@ -104,7 +125,6 @@ WSGI_APPLICATION = 'prepwise.wsgi.application'
 # Database — Supabase PostgreSQL (django schema; agent tables live in public)
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-from django.core.exceptions import ImproperlyConfigured
 from urllib.parse import unquote, urlparse
 
 
@@ -219,6 +239,49 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = Path(os.getenv("STATIC_ROOT", BASE_DIR / "staticfiles"))
+
+
+# ---------------------------------------------------------------------------
+# Security / deployment
+# ---------------------------------------------------------------------------
+# TLS-dependent settings are gated behind BEHIND_TLS because local and staging
+# deployments may run plain HTTP with no TLS terminator in front of them, and
+# turning these on there produces redirect loops and cookies the browser drops.
+# Set BEHIND_TLS=True wherever HTTPS is terminated (load balancer, ingress, or
+# the app itself).
+BEHIND_TLS = _env_flag("BEHIND_TLS")
+
+# Trust the proxy's protocol header so request.is_secure() is right behind a
+# TLS-terminating load balancer. Only meaningful when a proxy sets it.
+if BEHIND_TLS:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+SECURE_SSL_REDIRECT = BEHIND_TLS
+SESSION_COOKIE_SECURE = BEHIND_TLS
+CSRF_COOKIE_SECURE = BEHIND_TLS
+# 0 disables HSTS; only ever send it when TLS is actually in front.
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "31536000")) if BEHIND_TLS else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = BEHIND_TLS and _env_flag("SECURE_HSTS_INCLUDE_SUBDOMAINS", "True")
+SECURE_HSTS_PRELOAD = BEHIND_TLS and _env_flag("SECURE_HSTS_PRELOAD", "False")
+
+# Cheap and TLS-independent.
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # the SPA must read the token to send X-CSRFToken
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+
+# Django needs the scheme-qualified origins of anything POSTing a session/CSRF
+# form (admin, DRF browsable pages) when served over HTTPS.
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", str(5 * 1024 * 1024)))
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_API_BASE = os.getenv("GROQ_API_BASE", "https://api.groq.com/openai/v1")
@@ -254,6 +317,83 @@ REST_FRAMEWORK = {
     ],
     "EXCEPTION_HANDLER": "apis.utils.custom_exception_handler",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Throttling. Rates are env-tunable so a deployment can loosen them without
+    # a code change; a rate of None disables that scope (see ci_settings).
+    #
+    # NOTE: DRF counts hits in Django's cache, and CACHES above is in-process
+    # LocMem by design (no Redis). With N gunicorn workers each process keeps its
+    # own counter, so the effective ceiling is up to N x the configured rate.
+    # That is fine as abuse protection (it still bounds a single client) but it is
+    # not an exact quota — making it exact needs a shared cache backend, which is
+    # an infrastructure decision, not a code one.
+    "DEFAULT_THROTTLE_CLASSES": [
+        "prepwise.throttling.AuthBurstRateThrottle",
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        # Credential endpoints only, per IP: enough for a human fat-fingering a
+        # password, far too few for credential stuffing.
+        "auth": os.getenv("THROTTLE_AUTH_RATE", "20/min"),
+        # Unauthenticated traffic per IP (schema/docs + the auth endpoints).
+        "anon": os.getenv("THROTTLE_ANON_RATE", "60/min"),
+        # Authenticated traffic per user. The frontend caches with TTLs of
+        # 30s-10min (src/lib/apiCache.ts), so normal use is a handful of
+        # requests per page view; this leaves ~2 orders of magnitude of room.
+        "user": os.getenv("THROTTLE_USER_RATE", "600/min"),
+    },
+}
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+# Every record is stamped with the current request id (see prepwise/middleware.py)
+# so an X-Request-ID from a frontend bug report locates the backend log lines.
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG" if DEBUG else "INFO").strip().upper()
+LOG_FORMAT = os.getenv("LOG_FORMAT", "plain").strip().lower()
+# django.db.backends logs every SQL statement at DEBUG, which drowns everything
+# else; it stays opt-in via SQL_LOG_LEVEL=DEBUG.
+SQL_LOG_LEVEL = os.getenv("SQL_LOG_LEVEL", "WARNING").strip().upper()
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "request_id": {"()": "prepwise.logging_utils.RequestIDFilter"},
+    },
+    "formatters": {
+        "plain": {
+            "format": "%(asctime)s %(levelname)-8s [%(request_id)s] %(name)s: %(message)s",
+            "datefmt": "%Y-%m-%dT%H:%M:%S%z",
+        },
+        "json": {"()": "prepwise.logging_utils.JSONFormatter"},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["request_id"],
+            "formatter": "json" if LOG_FORMAT == "json" else "plain",
+        },
+    },
+    "root": {"handlers": ["console"], "level": LOG_LEVEL},
+    "loggers": {
+        "django": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": SQL_LOG_LEVEL,
+            "propagate": False,
+        },
+        # 4xx are logged at WARNING by Django; keep them, they are useful.
+        "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        "django.security": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        # Project loggers. App modules use logging.getLogger(__name__), so the
+        # app package name is the namespace to target.
+        "prepwise": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
+        **{
+            app: {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False}
+            for app in ("users", "apis", "analytics", "roadmap", "sandbox")
+        },
+    },
 }
 
 from datetime import timedelta
