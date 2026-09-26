@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'analytics',   # concept proficiency, streaks, practice attempts, dashboard/progress data
     'roadmap',     # personal learning path generator (Phase 2)
     'sandbox',     # proactive action queue + readiness (Phase 3)
+    'classroom',   # classroom home (Phase 1) — assembles today/plan/map/revise/readiness
 ]
 
 # Custom user model — must be set before first migration

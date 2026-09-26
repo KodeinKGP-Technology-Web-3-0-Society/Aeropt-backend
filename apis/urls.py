@@ -30,4 +30,5 @@ urlpatterns = [
     path("analytics/", include("analytics.urls")),
     path("roadmap/", include("roadmap.urls")),
     path("sandbox/", include("sandbox.urls")),
+    path("classroom/", include("classroom.urls")),
 ] + router.urls
