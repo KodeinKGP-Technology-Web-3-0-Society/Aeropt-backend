@@ -17,7 +17,7 @@ export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-prepwise.ci_settings}"
 
 echo "==> [backend] syntax"
 "$PYTHON" -m compileall -q -x '(\.venv|venv)' \
-  prepwise users apis analytics roadmap sandbox manage.py
+  prepwise users apis analytics roadmap sandbox classroom manage.py
 
 echo "==> [backend] django check"
 "$PYTHON" manage.py check

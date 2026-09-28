@@ -1,1 +1,80 @@
-# No models required for Phase 1.
+from django.conf import settings
+from django.db import models
+
+
+SURFACES = (
+    "home",
+    "plan",
+    "map",
+    "revise",
+    "lesson",
+    "assess",
+    "doubt",
+    "readiness",
+)
+
+KINDS = (
+    "attempt",
+    "mastery",
+    "doubt",
+    "handoff",
+    "plan",
+    "today",
+    "readiness",
+)
+
+
+class ConceptTracker(models.Model):
+    """One mastery row per learner per concept. This is the learner-facing score."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="concept_trackers",
+    )
+    concept_id = models.CharField(max_length=80)
+    title = models.CharField(max_length=160)
+    chapter = models.CharField(max_length=120, blank=True, default="")
+    mastery = models.SmallIntegerField(default=0)
+    attempts = models.PositiveIntegerField(default=0)
+    correct = models.PositiveIntegerField(default=0)
+    flagged_weak = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "classroom_concept_tracker"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "concept_id"],
+                name="classroom_tracker_user_concept",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.user_id}:{self.concept_id}:{self.mastery}"
+
+
+class EvidenceEvent(models.Model):
+    """Append-only bus. Agents post here; they do not write the tracker row themselves."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="evidence_events",
+    )
+    concept_id = models.CharField(max_length=80, blank=True, default="")
+    surface = models.CharField(max_length=20)
+    specialist = models.CharField(max_length=40, blank=True, default="")
+    kind = models.CharField(max_length=20)
+    payload = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "classroom_evidence_event"
+        ordering = ("created_at", "id")
+        indexes = [
+            models.Index(fields=["user", "created_at"], name="classroom_evidence_user_time"),
+        ]
+
+    def __str__(self):
+        return f"{self.user_id}:{self.kind}:{self.concept_id}"
