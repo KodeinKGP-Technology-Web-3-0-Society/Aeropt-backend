@@ -59,6 +59,10 @@ def overlay_specialists(
         "map": provisional["map"],
         "revise": revise if isinstance(revise, list) else provisional["revise"],
         "readiness": readiness if isinstance(readiness, dict) else provisional["readiness"],
+        # New dashboard fields — passed through from provisional, never overridden by specialists
+        "streak": provisional.get("streak", {"current_streak": 0, "week": []}),
+        "insights": provisional.get("insights", []),
+        "subject_mastery": provisional.get("subject_mastery", []),
     }
 
 
@@ -179,7 +183,9 @@ def _fill_plan(user, caller: Call, body, fallback):
     if filled is None:
         return fallback
     plan = _plan_list(filled.get("plan"))
-    if plan is None:
+    # An empty agent plan means the planning agent hasn't generated one yet;
+    # use the provisional (learning-path-derived) plan instead of overwriting with [].
+    if plan is None or not plan:
         return fallback
     _store(user, "plan", plan)
     return plan

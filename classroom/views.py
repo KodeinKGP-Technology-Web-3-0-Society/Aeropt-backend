@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -6,7 +8,7 @@ from apis.models import Concept
 from classroom.day import overlay_specialists, record_today_decision
 from classroom.models import ClassroomSession, ConceptTracker
 from classroom.tracker import EvidenceError, apply_evidence
-from roadmap.generator import get_active_learning_path
+from roadmap.generator import get_active_learning_path, generate_learning_path
 from roadmap.models import NodeStatus
 from sandbox.orchestrator import build_action_queue
 
@@ -32,35 +34,60 @@ def _build_today(user) -> Optional[Dict[str, Any]]:
         "minutes": int(card.get("duration_min") or 25),
     }
 
-def _build_plan(user) -> List[Dict[str, Any]]:
+def _build_plan(user, limit: int = 5) -> List[Dict[str, Any]]:
+    """Return only the agent-decided window (next `limit` concepts).
+
+    Students never see all 133 nodes. The agent picks the window:
+    the in-progress node + the next (limit-1) pending nodes in sequence order.
+    """
     path = get_active_learning_path(user)
     if not path:
         return []
 
-    nodes = list(path.nodes.order_by("sequence_index"))
-    today_idx: Optional[int] = None
-    for i, node in enumerate(nodes):
-        if node.status == NodeStatus.IN_PROGRESS:
-            today_idx = i
-            break
-    if today_idx is None:
-        for i, node in enumerate(nodes):
-            if node.status == NodeStatus.PENDING:
-                today_idx = i
-                break
+    # Only non-skipped, non-completed nodes ordered by sequence
+    open_nodes = list(
+        path.nodes.exclude(status__in=[NodeStatus.SKIPPED, "completed"])
+        .order_by("sequence_index")
+    )
+    if not open_nodes:
+        return []
+
+    # Find the current node (in_progress first, then first pending)
+    current_idx = next(
+        (i for i, n in enumerate(open_nodes) if n.status == NodeStatus.IN_PROGRESS),
+        0,
+    )
+
+    window = open_nodes[current_idx: current_idx + limit]
+    remaining_after = len(open_nodes) - current_idx - len(window)
 
     plan: List[Dict[str, Any]] = []
-    for i, node in enumerate(nodes):
-        when = "today" if today_idx is not None and i == today_idx else "this_week"
+    for i, node in enumerate(window):
+        when = "today" if i == 0 else "this_week"
         plan.append(
             {
                 "concept_id": node.concept_id or "",
                 "title": node.concept_name or "",
                 "status": node.status or "pending",
                 "when": when,
+                "chapter": node.chapter or "",
+                "estimated_minutes": int(getattr(node, "estimated_minutes", 12) or 12),
             }
         )
+
+    # Append a summary stub so the UI can show "N more concepts" without fetching all
+    if remaining_after > 0:
+        plan.append({
+            "concept_id": "__more__",
+            "title": f"{remaining_after} more concepts in your plan",
+            "status": "pending",
+            "when": "later",
+            "chapter": "",
+            "estimated_minutes": 0,
+        })
+
     return plan
+
 
 def _trackers_by_concept(user) -> Dict[str, ConceptTracker]:
     return {row.concept_id: row for row in ConceptTracker.objects.filter(user=user)}
@@ -146,13 +173,146 @@ def _build_readiness(user) -> Dict[str, Any]:
     return {"score": score, "label": _readiness_label(score)}
 
 
+def _build_streak(user) -> Dict[str, Any]:
+    """Return current streak and which days this week had activity."""
+    today = date.today()
+    week_start = today - timedelta(days=today.weekday())  # Monday
+    week_days = [week_start + timedelta(days=i) for i in range(7)]
+
+    # Days with any tracker update this week
+    active_dates = set(
+        ConceptTracker.objects.filter(
+            user=user,
+            updated_at__date__gte=week_start,
+            attempts__gte=1,
+        ).values_list("updated_at__date", flat=True)
+    )
+
+    week_activity = [
+        {"date": d.isoformat(), "active": d in active_dates, "is_today": d == today}
+        for d in week_days
+    ]
+
+    # Streak: consecutive days ending today going backwards
+    streak = 0
+    check = today
+    all_active = set(
+        ConceptTracker.objects.filter(user=user, attempts__gte=1)
+        .values_list("updated_at__date", flat=True)
+        .distinct()
+    )
+    while check in all_active:
+        streak += 1
+        check -= timedelta(days=1)
+
+    return {"current_streak": streak, "week": week_activity}
+
+
+def _build_insights(user, map_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Rules-based insight cards — no LLM needed."""
+    insights: List[Dict[str, Any]] = []
+
+    trackers = list(ConceptTracker.objects.filter(user=user))
+    weak = [t for t in trackers if t.flagged_weak]
+    attempted = [t for t in trackers if t.attempts >= 1]
+
+    # Weak concepts alert
+    if weak:
+        insights.append({
+            "type": "weak_concepts",
+            "title": f"{len(weak)} concept{'s' if len(weak) > 1 else ''} flagged as weak",
+            "body": "Revise these before moving on to keep your score from dropping.",
+            "action": "/home",
+            "action_label": "Review Now",
+            "count": len(weak),
+        })
+
+    # Chapter mastery unlock
+    if map_data:
+        chapters: Dict[str, List[int]] = {}
+        for item in map_data:
+            ch = item["chapter"]
+            chapters.setdefault(ch, []).append(item["mastery"])
+        for ch, scores in list(chapters.items())[:3]:
+            avg = sum(scores) / len(scores) if scores else 0
+            if avg >= 60:
+                insights.append({
+                    "type": "chapter_ready",
+                    "title": f"{ch} — ready to level up",
+                    "body": f"Your average mastery in {ch} is {int(avg)}%. Consider a practice test.",
+                    "action": "/practice",
+                    "action_label": "Practice",
+                })
+                break
+
+    # Cold start nudge — no attempts yet
+    if not attempted:
+        insights.append({
+            "type": "cold_start",
+            "title": "Your learning path is ready",
+            "body": "The AI has built a personalised study plan for you. Start your first session now.",
+            "action": "/chat",
+            "action_label": "Start Learning",
+        })
+    elif len(attempted) < 5:
+        insights.append({
+            "type": "early_progress",
+            "title": f"{len(attempted)} concept{'s' if len(attempted) > 1 else ''} studied",
+            "body": "Great start! Keep going — consistency beats cramming.",
+            "action": "/home",
+            "action_label": "Continue",
+        })
+
+    return insights[:3]
+
+
+def _build_subject_mastery(user) -> List[Dict[str, Any]]:
+    """Per-subject aggregated mastery for the three rings."""
+    subjects = [
+        {"id": "physics", "label": "Physics", "color": "physics", "active": True},
+        {"id": "chemistry", "label": "Chemistry", "color": "chemistry", "active": False},
+        {"id": "maths", "label": "Maths", "color": "maths", "active": False},
+    ]
+    trackers = list(ConceptTracker.objects.filter(user=user, attempts__gte=1))
+    result = []
+    for subj in subjects:
+        if subj["active"]:
+            relevant = trackers  # all current trackers are Physics for now
+            if relevant:
+                avg = int(round(sum(t.mastery for t in relevant) / len(relevant)))
+                total = ConceptTracker.objects.filter(user=user).count()
+                mastered = ConceptTracker.objects.filter(user=user, mastery__gte=65).count()
+            else:
+                avg, total, mastered = 0, 0, 0
+            result.append({**subj, "mastery": avg, "total": total, "mastered": mastered})
+        else:
+            result.append({**subj, "mastery": 0, "total": 0, "mastered": 0, "coming_soon": True})
+    return result
+
+
+def _ensure_learning_path(user) -> None:
+    """Auto-generate a learning path if the user has none (first visit)."""
+    from roadmap.generator import get_active_learning_path, generate_learning_path
+    path = get_active_learning_path(user, subject="Physics")
+    if path is None:
+        try:
+            generate_learning_path(user, subject="Physics")
+        except Exception:
+            pass  # Best effort
+
+
 def _provisional_home(user) -> Dict[str, Any]:
+    _ensure_learning_path(user)
+    map_data = _build_map(user)
     return {
         "today": _build_today(user),
         "plan": _build_plan(user),
-        "map": _build_map(user),
+        "map": map_data,
         "revise": _build_revise(user),
         "readiness": _build_readiness(user),
+        "streak": _build_streak(user),
+        "insights": _build_insights(user, map_data),
+        "subject_mastery": _build_subject_mastery(user),
     }
 
 
