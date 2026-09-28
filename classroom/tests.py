@@ -312,3 +312,32 @@ class DaySpecialistHomeTests(APITestCase):
             EvidenceEvent.objects.filter(user=self.user, kind="today").count(),
             1,
         )
+
+
+class SessionTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="room@example.com",
+            password="testpass123",
+            full_name="Room Student",
+        )
+        self.client.force_authenticate(self.user)
+
+    def test_repeat_lesson_open_returns_the_same_row(self):
+        first = self.client.post(
+            "/api/v1/classroom/sessions/",
+            {"surface": "lesson", "concept_id": "torque"},
+            format="json",
+        )
+        second = self.client.post(
+            "/api/v1/classroom/sessions/",
+            {"surface": "lesson", "concept_id": "torque", "agent_session_id": "sess-1"},
+            format="json",
+        )
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(second.data["agent_session_id"], "sess-1")
+        self.assertEqual(second.data["surface"], "lesson")
+        lookup = self.client.get("/api/v1/classroom/sessions/sess-1/")
+        self.assertEqual(lookup.status_code, 200)
+        self.assertEqual(lookup.data["concept_id"], "torque")

@@ -108,3 +108,28 @@ class TodayDecision(models.Model):
 
     def __str__(self):
         return f"{self.user_id}:{self.for_date}:{self.concept_id}:{self.status}"
+
+
+class ClassroomSession(models.Model):
+    """One open room. Lesson is unique per concept; doubt and assess, one each."""
+
+    OPEN = "open"
+    CLOSED = "closed"
+    SURFACES = ("lesson", "doubt", "assess")
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="classroom_sessions",
+    )
+    surface = models.CharField(max_length=20)
+    concept_id = models.CharField(max_length=80, blank=True, default="")
+    agent_session_id = models.CharField(max_length=80, blank=True, default="")
+    status = models.CharField(max_length=20, default=OPEN)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "classroom_session"
+
+    def __str__(self):
+        return f"{self.user_id}:{self.surface}:{self.concept_id}:{self.status}"

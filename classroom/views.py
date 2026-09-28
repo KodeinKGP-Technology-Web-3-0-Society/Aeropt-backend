@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from typing import Any, Dict, List, Optional
 from apis.models import Concept
 from classroom.day import overlay_specialists, record_today_decision
-from classroom.models import ConceptTracker
+from classroom.models import ClassroomSession, ConceptTracker
 from classroom.tracker import EvidenceError, apply_evidence
 from roadmap.generator import get_active_learning_path
 from roadmap.models import NodeStatus
@@ -190,3 +190,70 @@ class TodayDecisionView(APIView):
             return Response({"detail": "unknown today decision"}, status=400)
         record_today_decision(request.user, concept_id, decision)
         return Response(overlay_specialists(request.user, _provisional_home(request.user)))
+
+
+def _session_payload(row: ClassroomSession) -> Dict[str, str]:
+    return {
+        "surface": row.surface,
+        "concept_id": row.concept_id,
+        "agent_session_id": row.agent_session_id,
+        "status": row.status,
+    }
+
+
+def _open_session(user, surface: str, concept_id: str, agent_session_id: str) -> ClassroomSession:
+    if surface == "lesson":
+        existing = ClassroomSession.objects.filter(
+            user=user, surface=surface, concept_id=concept_id, status=ClassroomSession.OPEN
+        ).first()
+    else:
+        existing = ClassroomSession.objects.filter(
+            user=user, surface=surface, status=ClassroomSession.OPEN
+        ).first()
+    if existing is not None:
+        changed = []
+        if concept_id and existing.concept_id != concept_id:
+            existing.concept_id = concept_id
+            changed.append("concept_id")
+        if agent_session_id and existing.agent_session_id != agent_session_id:
+            existing.agent_session_id = agent_session_id
+            changed.append("agent_session_id")
+        if changed:
+            existing.save(update_fields=changed)
+        return existing
+    return ClassroomSession.objects.create(
+        user=user,
+        surface=surface,
+        concept_id=concept_id,
+        agent_session_id=agent_session_id,
+        status=ClassroomSession.OPEN,
+    )
+
+
+class ClassroomSessionView(APIView):
+    """Open or return the room for this learner. A repeat open returns the same row."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        surface = str(request.data.get("surface") or "").strip().lower()
+        concept_id = str(request.data.get("concept_id") or "").strip()
+        agent_session_id = str(request.data.get("agent_session_id") or "").strip()
+        if surface not in ClassroomSession.SURFACES:
+            return Response({"detail": "surface must be lesson, doubt, or assess"}, status=400)
+        if surface == "lesson" and not concept_id:
+            return Response({"detail": "concept_id is required"}, status=400)
+        row = _open_session(request.user, surface, concept_id, agent_session_id)
+        return Response(_session_payload(row))
+
+
+class ClassroomSessionLookupView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, agent_session_id: str):
+        row = ClassroomSession.objects.filter(
+            user=request.user, agent_session_id=agent_session_id
+        ).first()
+        if row is None:
+            return Response({"detail": "not found"}, status=404)
+        return Response(_session_payload(row))

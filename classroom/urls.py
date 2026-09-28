@@ -1,5 +1,11 @@
 from django.urls import path
-from classroom.views import ClassroomEvidenceView, ClassroomHomeView, TodayDecisionView
+from classroom.views import (
+    ClassroomEvidenceView,
+    ClassroomHomeView,
+    ClassroomSessionLookupView,
+    ClassroomSessionView,
+    TodayDecisionView,
+)
 
 urlpatterns = [
     path("home/", ClassroomHomeView.as_view(), name="classroom-home"),
@@ -15,5 +21,11 @@ urlpatterns = [
         TodayDecisionView.as_view(),
         {"decision": "dismiss"},
         name="classroom-today-dismiss",
+    ),
+    path("sessions/", ClassroomSessionView.as_view(), name="classroom-session-open"),
+    path(
+        "sessions/<str:agent_session_id>/",
+        ClassroomSessionLookupView.as_view(),
+        name="classroom-session-lookup",
     ),
 ]
