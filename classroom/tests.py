@@ -193,3 +193,122 @@ class EvidenceApiTests(APITestCase):
             format="json",
         )
         self.assertEqual(res.status_code, 401)
+
+
+class DaySpecialistHomeTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="day@example.com",
+            password="testpass123",
+            full_name="Day Student",
+        )
+        _path(self.user, proficiency=40)
+        self.client.force_authenticate(self.user)
+
+    def test_stored_today_plan_and_readiness_win(self):
+        from django.utils import timezone
+
+        from classroom.models import EvidenceEvent
+
+        for_date = timezone.localdate().isoformat()
+        EvidenceEvent.objects.create(
+            user=self.user,
+            concept_id="friction",
+            surface="home",
+            specialist="daily",
+            kind="today",
+            payload={
+                "concept_id": "friction",
+                "title": "Friction",
+                "action": "revise",
+                "minutes": 25,
+                "for_date": for_date,
+            },
+        )
+        EvidenceEvent.objects.create(
+            user=self.user,
+            surface="home",
+            specialist="planning",
+            kind="plan",
+            payload=[
+                {
+                    "concept_id": "energy",
+                    "title": "Energy",
+                    "status": "pending",
+                    "when": "today",
+                }
+            ],
+        )
+        EvidenceEvent.objects.create(
+            user=self.user,
+            surface="home",
+            specialist="readiness-agent",
+            kind="readiness",
+            payload={"score": 62, "label": "building"},
+        )
+        home = self.client.get("/api/v1/classroom/home/")
+        self.assertEqual(home.status_code, 200)
+        self.assertEqual(home.data["today"]["concept_id"], "friction")
+        self.assertNotIn("provisional", home.data["today"])
+        self.assertEqual(home.data["plan"][0]["concept_id"], "energy")
+        self.assertEqual(home.data["readiness"], {"score": 62, "label": "building"})
+
+    def test_missing_today_is_provisional_when_agent_is_unset(self):
+        home = self.client.get("/api/v1/classroom/home/")
+        self.assertEqual(home.data["today"]["concept_id"], "torque")
+        self.assertTrue(home.data["today"]["provisional"])
+
+    def test_complete_omits_todays_concept(self):
+        res = self.client.post("/api/v1/classroom/today/torque/complete/", {}, format="json")
+        self.assertEqual(res.status_code, 200)
+        self.assertIsNone(res.data["today"])
+
+    def test_agent_fill_is_stored_and_not_repeated(self):
+        from unittest.mock import patch
+
+        from classroom.models import EvidenceEvent
+
+        calls = []
+
+        def fake(name, body):
+            calls.append(name)
+            for_date = body["for_date"]
+            if name == "daily":
+                return {
+                    "today": {
+                        "concept_id": "energy",
+                        "title": "Energy",
+                        "action": "lesson",
+                        "minutes": 25,
+                        "for_date": for_date,
+                    }
+                }
+            if name == "plan":
+                return {
+                    "plan": [
+                        {
+                            "concept_id": "energy",
+                            "title": "Energy",
+                            "status": "in_progress",
+                            "when": "today",
+                        }
+                    ]
+                }
+            if name == "revise":
+                return {"revise": []}
+            if name == "readiness":
+                return {"readiness": {"score": 55, "label": "building"}}
+            return None
+
+        with patch("classroom.day.call_specialist", side_effect=fake):
+            first = self.client.get("/api/v1/classroom/home/")
+            second = self.client.get("/api/v1/classroom/home/")
+
+        self.assertEqual(first.data["today"]["concept_id"], "energy")
+        self.assertNotIn("provisional", first.data["today"])
+        self.assertEqual(second.data["today"]["concept_id"], "energy")
+        self.assertEqual(calls.count("daily"), 1)
+        self.assertEqual(
+            EvidenceEvent.objects.filter(user=self.user, kind="today").count(),
+            1,
+        )

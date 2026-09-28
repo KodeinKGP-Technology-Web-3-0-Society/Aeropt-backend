@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from typing import Any, Dict, List, Optional
 from apis.models import Concept
+from classroom.day import overlay_specialists, record_today_decision
 from classroom.models import ConceptTracker
 from classroom.tracker import EvidenceError, apply_evidence
 from roadmap.generator import get_active_learning_path
@@ -145,17 +146,21 @@ def _build_readiness(user) -> Dict[str, Any]:
     return {"score": score, "label": _readiness_label(score)}
 
 
+def _provisional_home(user) -> Dict[str, Any]:
+    return {
+        "today": _build_today(user),
+        "plan": _build_plan(user),
+        "map": _build_map(user),
+        "revise": _build_revise(user),
+        "readiness": _build_readiness(user),
+    }
+
+
 class ClassroomHomeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response({
-            "today": _build_today(request.user),
-            "plan": _build_plan(request.user),
-            "map": _build_map(request.user),
-            "revise": _build_revise(request.user),
-            "readiness": _build_readiness(request.user),
-        })
+        return Response(overlay_specialists(request.user, _provisional_home(request.user)))
 
 
 class ClassroomEvidenceView(APIView):
@@ -172,3 +177,16 @@ class ClassroomEvidenceView(APIView):
             {"id": event.id, "concept_id": event.concept_id, "kind": event.kind},
             status=201,
         )
+
+
+class TodayDecisionView(APIView):
+    """Record complete or dismiss, then return the home with that concept omitted."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, concept_id: str, decision: str):
+        concept_id = (concept_id or "").strip()
+        if decision not in ("complete", "dismiss") or not concept_id:
+            return Response({"detail": "unknown today decision"}, status=400)
+        record_today_decision(request.user, concept_id, decision)
+        return Response(overlay_specialists(request.user, _provisional_home(request.user)))

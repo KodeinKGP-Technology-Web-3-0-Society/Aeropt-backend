@@ -21,6 +21,7 @@ KINDS = (
     "plan",
     "today",
     "readiness",
+    "revise",
 )
 
 
@@ -78,3 +79,32 @@ class EvidenceEvent(models.Model):
 
     def __str__(self):
         return f"{self.user_id}:{self.kind}:{self.concept_id}"
+
+
+class TodayDecision(models.Model):
+    """Complete or dismiss for one concept on one date. Home omits that concept."""
+
+    COMPLETE = "complete"
+    DISMISS = "dismiss"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="today_decisions",
+    )
+    concept_id = models.CharField(max_length=80)
+    for_date = models.DateField()
+    status = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "classroom_today_decision"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "concept_id", "for_date"],
+                name="classroom_today_decision_once",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.user_id}:{self.for_date}:{self.concept_id}:{self.status}"
