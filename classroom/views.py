@@ -417,3 +417,33 @@ class ClassroomSessionLookupView(APIView):
         if row is None:
             return Response({"detail": "not found"}, status=404)
         return Response(_session_payload(row))
+
+class CalendarAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        path = get_active_learning_path(request.user)
+        if not path:
+            return Response([])
+
+        open_nodes = list(
+            path.nodes.exclude(status__in=[NodeStatus.SKIPPED, "completed"])
+            .order_by("sequence_index")[:30]
+        )
+
+        calendar_plan = []
+        today = date.today()
+        
+        # Agentic logic: map the next 30 concepts over the next 30 days
+        for i, node in enumerate(open_nodes):
+            assigned_date = today + timedelta(days=i)
+            calendar_plan.append({
+                "date": assigned_date.isoformat(),
+                "concept_id": node.concept_id or "",
+                "title": node.concept_name or "",
+                "chapter": node.chapter or "",
+                "estimated_minutes": int(getattr(node, "estimated_minutes", 15) or 15),
+            })
+            
+        return Response(calendar_plan)
+

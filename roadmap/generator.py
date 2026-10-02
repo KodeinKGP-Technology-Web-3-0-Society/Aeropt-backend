@@ -234,6 +234,34 @@ def topological_sort(
     return ordered
 
 
+def _path_concept_rows(subject: str = "Physics") -> List[Dict[str, Any]]:
+    """Rows that belong on the student path.
+
+    The path is the JEE syllabus YAML. Live knowledge-graph rows overlay
+    names for matching concept_ids so seeded content wins on naming.
+    Extra live concepts (textbook dumps outside the syllabus) stay out of
+    the path — they must not inflate the study plan into a thousand-node
+    dump. Chat can still retrieve them if the student asks.
+    """
+    spec_rows = _syllabus_concepts_fallback(subject)
+    live_by_id = {row["concept_id"]: row for row in _read_live_concepts(subject)}
+    if spec_rows:
+        rows: List[Dict[str, Any]] = []
+        for row in spec_rows:
+            live = live_by_id.get(row["concept_id"])
+            if not live:
+                rows.append(row)
+                continue
+            rows.append(
+                {
+                    **row,
+                    "concept_name": live.get("concept_name") or row.get("concept_name"),
+                }
+            )
+        return rows
+    return list(live_by_id.values())
+
+
 def _merge_concepts(live_rows: List[Dict[str, Any]], subject: str = "Physics") -> List[Dict[str, Any]]:
     spec_map = syllabus_concept_map(subject)
     chapter_orders = chapter_order_map(subject)
@@ -242,7 +270,7 @@ def _merge_concepts(live_rows: List[Dict[str, Any]], subject: str = "Physics") -
     for row in live_rows:
         concept_id = row["concept_id"]
         spec = spec_map.get(concept_id, {})
-        chapter = row.get("chapter") or spec.get("chapter") or subject
+        chapter = spec.get("chapter") or row.get("chapter") or subject
         merged.append(
             {
                 "concept_id": concept_id,
@@ -286,23 +314,10 @@ def generate_learning_path(user, *, subject: str = "Physics", force: bool = Fals
         existing.is_active = False
         existing.save(update_fields=["is_active", "updated_at"])
 
-    # The roadmap is the *syllabus*, not just the seeded content: union what
-    # the knowledge graph actually has with everything the syllabus spec
-    # describes. Seeded rows win on naming (they're the live truth); the rest
-    # come from YAML and are flagged not-yet-teachable at serialization time
-    # (PathNodeSerializer.content_ready), so the student sees the whole plan
-    # and which parts have lessons ready.
-    #
-    # This used to be either/or — live rows, else YAML — which meant adding a
-    # chapter to the syllabus had no effect at all for any subject that had
-    # even one seeded concept. Physics showed 3 of its 14 chapters and looked
-    # complete.
-    rows_by_id: Dict[str, Dict[str, Any]] = {
-        row["concept_id"]: row for row in _syllabus_concepts_fallback(subject)
-    }
-    for row in _read_live_concepts(subject):
-        rows_by_id[row["concept_id"]] = row
-    live_rows = list(rows_by_id.values())
+    # YAML is the path (all JEE chapters). Live KG rows overlay matching
+    # ids so seeded names win. They used to be unioned, which pulled every
+    # extra textbook concept into the student plan.
+    live_rows = _path_concept_rows(subject)
     if not live_rows:
         raise ValueError("No concepts available to build a roadmap.")
 
@@ -401,3 +416,115 @@ def get_next_nodes(path: LearningPath, limit: int = 3) -> List[PathNode]:
 
     pending = path.nodes.filter(status=NodeStatus.PENDING).order_by("sequence_index")[:limit]
     return list(pending)
+
+
+_STAGE_WORDS = {
+    "theory": "theory",
+    "example": "a worked example",
+    "practice": "practice",
+    "pyq": "a PYQ",
+}
+
+
+def _action_for(node: Any) -> str:
+    node_type = str(getattr(node, "node_type", "") or "").upper()
+    sequence = list(getattr(node, "content_sequence", None) or ["theory", "example", "practice"])
+    words = [_STAGE_WORDS.get(str(stage).lower(), str(stage)) for stage in sequence[:3]]
+    path = " → ".join(words) if words else "theory → a worked example"
+    if node_type == NodeType.REVISE:
+        return "Skip a full theory pass. Do a worked example, then a PYQ."
+    return f"Complete {path}. Go deeper only if you want more."
+
+
+def compose_study_plan(
+    nodes: List[Any],
+    *,
+    subject: str = "Physics",
+    daily_goal_minutes: int = 45,
+    week_limit: int = 5,
+) -> Dict[str, Any]:
+    """Narrow Planly-style plan from the full generated path.
+
+    The generator still stores every syllabus node. This view tells the student
+    what to follow *this week* and hides the rest behind chapter explore.
+    """
+    ordered = sorted(nodes, key=lambda n: int(getattr(n, "sequence_index", 0) or 0))
+    open_nodes = [
+        n
+        for n in ordered
+        if str(getattr(n, "status", "")) not in {NodeStatus.SKIPPED, NodeStatus.COMPLETED}
+    ]
+    current = next(
+        (n for n in open_nodes if str(getattr(n, "status", "")) == NodeStatus.IN_PROGRESS),
+        None,
+    ) or (open_nodes[0] if open_nodes else None)
+
+    limit = max(3, min(week_limit, max(3, (daily_goal_minutes or 45) // 12)))
+    if current is None:
+        this_week_nodes = []
+    else:
+        current_id = str(getattr(current, "id"))
+        start = next(
+            (i for i, n in enumerate(open_nodes) if str(getattr(n, "id")) == current_id),
+            0,
+        )
+        this_week_nodes = open_nodes[start : start + limit]
+    this_week = [
+        {
+            "node_id": str(getattr(n, "id")),
+            "action": _action_for(n),
+        }
+        for n in this_week_nodes
+    ]
+
+    week_ids = {str(getattr(n, "id")) for n in this_week_nodes}
+    last_seq = max(
+        (int(getattr(n, "sequence_index", 0) or 0) for n in this_week_nodes),
+        default=-1,
+    )
+    later_counts: Dict[str, Dict[str, int]] = {}
+    for n in open_nodes:
+        if str(getattr(n, "id")) in week_ids:
+            continue
+        if int(getattr(n, "sequence_index", 0) or 0) <= last_seq:
+            continue
+        chapter = getattr(n, "chapter", None) or subject
+        bucket = later_counts.setdefault(chapter, {"remaining": 0, "minutes": 0})
+        bucket["remaining"] += 1
+        bucket["minutes"] += int(getattr(n, "estimated_minutes", 0) or 0)
+    later_all = [
+        {"chapter": chapter, "remaining": counts["remaining"], "minutes": counts["minutes"]}
+        for chapter, counts in later_counts.items()
+    ]
+    later_cap = 14
+    later = later_all[:later_cap]
+    later_more = max(0, len(later_all) - later_cap)
+
+    if current is None:
+        headline = f"{subject} path complete"
+        why = "Every concept on this path is done or skipped. Open a chapter below to review."
+    else:
+        week_chapters = []
+        for n in this_week_nodes:
+            ch = getattr(n, "chapter", "") or subject
+            if ch not in week_chapters:
+                week_chapters.append(ch)
+        if len(week_chapters) == 1:
+            headline = f"This week: {week_chapters[0]}"
+        elif week_chapters:
+            headline = f"This week: {week_chapters[0]}, then {week_chapters[1]}"
+        else:
+            headline = f"This week on {subject}"
+        why = (
+            f"Follow this order. Prerequisites come first, so do not skip ahead. "
+            f"Today start with {getattr(current, 'concept_name', 'the next concept')}."
+        )
+
+    return {
+        "headline": headline,
+        "why": why,
+        "today_node_id": str(getattr(current, "id")) if current is not None else None,
+        "this_week": this_week,
+        "later": later,
+        "later_more": later_more,
+    }

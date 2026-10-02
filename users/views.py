@@ -25,6 +25,22 @@ from users.models import (
     UserAchievement,
     UserPreferences,
 )
+
+class LeaderboardAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        top_profiles = StudentProfile.objects.select_related("user").order_by("-current_streak", "-highest_streak")[:10]
+        data = []
+        for rank, p in enumerate(top_profiles, 1):
+            data.append({
+                "rank": rank,
+                "user_id": p.user.id,
+                "name": p.user.full_name or p.user.email.split("@")[0],
+                "current_streak": p.current_streak,
+                "highest_streak": p.highest_streak,
+            })
+        return Response(data)
 from users.placement_planner import build_placement_plan, get_physics_chapters_metadata
 from users.supabase_sync import (
     ensure_supabase_user,

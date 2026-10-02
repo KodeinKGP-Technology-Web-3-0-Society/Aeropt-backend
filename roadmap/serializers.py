@@ -81,6 +81,7 @@ class LearningPathSerializer(serializers.ModelSerializer):
     nodes = PathNodeSerializer(many=True, read_only=True)
     progress_pct = serializers.SerializerMethodField()
     current_node = serializers.SerializerMethodField()
+    study_plan = serializers.SerializerMethodField()
 
     class Meta:
         model = LearningPath
@@ -93,6 +94,7 @@ class LearningPathSerializer(serializers.ModelSerializer):
             "daily_goal_minutes",
             "progress_pct",
             "current_node",
+            "study_plan",
             "nodes",
             "created_at",
             "updated_at",
@@ -112,6 +114,15 @@ class LearningPathSerializer(serializers.ModelSerializer):
         if not node:
             return None
         return PathNodeSerializer(node, context=self.context).data
+
+    def get_study_plan(self, obj: LearningPath) -> dict:
+        from roadmap.generator import compose_study_plan
+
+        return compose_study_plan(
+            list(obj.nodes.all()),
+            subject=obj.subject or "Physics",
+            daily_goal_minutes=obj.daily_goal_minutes or 45,
+        )
 
 
 class RoadmapNextSerializer(serializers.Serializer):

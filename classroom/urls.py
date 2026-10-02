@@ -5,9 +5,11 @@ from classroom.views import (
     ClassroomSessionLookupView,
     ClassroomSessionView,
     TodayDecisionView,
+    CalendarAPIView,
 )
 
 urlpatterns = [
+    path("calendar/", CalendarAPIView.as_view(), name="classroom-calendar"),
     path("home/", ClassroomHomeView.as_view(), name="classroom-home"),
     path("evidence/", ClassroomEvidenceView.as_view(), name="classroom-evidence"),
     path(

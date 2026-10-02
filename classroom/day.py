@@ -77,6 +77,7 @@ def record_today_decision(user, concept_id: str, status: str) -> None:
 
 def _learner_body(user, provisional, for_date: str, skip: List[str]) -> Dict[str, Any]:
     return {
+        "user_id": str(user.id) if hasattr(user, "id") else "",
         "for_date": for_date,
         "skip_concept_ids": skip,
         "home": provisional,

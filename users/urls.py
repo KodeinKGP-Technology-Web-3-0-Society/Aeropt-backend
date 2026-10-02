@@ -22,6 +22,7 @@ from users.views import (
     UserAchievementViewSet,
     UserPreferencesViewSet,
     UserViewSet,
+    LeaderboardAPIView,
 )
 
 router = DefaultRouter()
@@ -52,4 +53,6 @@ onboarding_urlpatterns = [
     path("complete/", OnboardingCompleteView.as_view(), name="onboarding-complete"),
 ]
 
-user_urlpatterns = router.urls
+user_urlpatterns = [
+    path("leaderboard/", LeaderboardAPIView.as_view(), name="leaderboard"),
+] + router.urls

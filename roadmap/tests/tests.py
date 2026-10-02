@@ -1,8 +1,9 @@
+from types import SimpleNamespace
 from unittest import mock
 
 from django.test import SimpleTestCase
 
-from roadmap.generator import live_concept_ids, topological_sort
+from roadmap.generator import compose_study_plan, live_concept_ids, topological_sort, _path_concept_rows
 from roadmap.syllabus import (
     available_subjects,
     chapter_order_map,
@@ -132,3 +133,149 @@ class TeachableConceptTests(SimpleTestCase):
             self.assertEqual(
                 live_concept_ids("Physics"), {"has_lessons", "registered_only"}
             )
+
+
+def _node(**kwargs):
+    defaults = {
+        "id": "n1",
+        "sequence_index": 0,
+        "status": "pending",
+        "chapter": "Laws of Motion",
+        "concept_name": "Newton's 1st Law",
+        "node_type": "LEARN",
+        "content_sequence": ["theory", "example", "practice"],
+        "estimated_minutes": 10,
+    }
+    defaults.update(kwargs)
+    return SimpleNamespace(**defaults)
+
+
+class StudyPlanTests(SimpleTestCase):
+    def test_plan_is_a_short_week_not_the_full_syllabus(self):
+        nodes = [
+            _node(id="a", sequence_index=0, status="in_progress", concept_name="Newton's 1st Law"),
+            _node(id="b", sequence_index=1, status="pending", concept_name="Newton's 2nd Law"),
+            _node(id="c", sequence_index=2, status="pending", concept_name="Tension"),
+            _node(
+                id="d",
+                sequence_index=3,
+                status="pending",
+                chapter="Rotational Motion",
+                concept_name="Torque",
+            ),
+            _node(
+                id="e",
+                sequence_index=4,
+                status="pending",
+                chapter="Rotational Motion",
+                concept_name="Moment of Inertia",
+            ),
+            _node(
+                id="f",
+                sequence_index=5,
+                status="pending",
+                chapter="Optics",
+                concept_name="Lenses",
+            ),
+        ]
+        plan = compose_study_plan(nodes, subject="Physics", daily_goal_minutes=45)
+        self.assertEqual(plan["today_node_id"], "a")
+        self.assertLessEqual(len(plan["this_week"]), 5)
+        self.assertGreaterEqual(len(plan["this_week"]), 3)
+        self.assertTrue(plan["headline"].startswith("This week:"))
+        later_chapters = {row["chapter"] for row in plan["later"]}
+        this_week_ids = {row["node_id"] for row in plan["this_week"]}
+        self.assertIn("Optics", later_chapters)
+        self.assertIn("Rotational Motion", later_chapters)
+        self.assertNotIn("Laws of Motion", later_chapters)
+        self.assertIn("a", this_week_ids)
+        self.assertNotIn("f", this_week_ids)
+        self.assertEqual(plan["later_more"], 0)
+
+    def test_week_starts_at_in_progress_not_the_first_pending(self):
+        nodes = [
+            _node(id="a", sequence_index=0, status="pending", concept_name="Units"),
+            _node(id="b", sequence_index=1, status="pending", concept_name="Vectors"),
+            _node(
+                id="c",
+                sequence_index=2,
+                status="in_progress",
+                chapter="Kinematics",
+                concept_name="Displacement",
+            ),
+            _node(
+                id="d",
+                sequence_index=3,
+                status="pending",
+                chapter="Kinematics",
+                concept_name="Velocity",
+            ),
+            _node(
+                id="e",
+                sequence_index=4,
+                status="pending",
+                chapter="Kinematics",
+                concept_name="Acceleration",
+            ),
+            _node(
+                id="f",
+                sequence_index=5,
+                status="pending",
+                chapter="Optics",
+                concept_name="Lenses",
+            ),
+        ]
+        plan = compose_study_plan(nodes, subject="Physics", daily_goal_minutes=45)
+        self.assertEqual(plan["today_node_id"], "c")
+        self.assertEqual(plan["this_week"][0]["node_id"], "c")
+        self.assertNotIn("a", {row["node_id"] for row in plan["this_week"]})
+        later_chapters = {row["chapter"] for row in plan["later"]}
+        self.assertIn("Optics", later_chapters)
+        self.assertNotIn("Laws of Motion", later_chapters)
+
+    def test_later_chapter_list_is_capped(self):
+        nodes = [
+            _node(id=str(i), sequence_index=i, status="pending", chapter=f"Ch{i}", concept_name=f"N{i}")
+            for i in range(30)
+        ]
+        plan = compose_study_plan(nodes, daily_goal_minutes=45)
+        self.assertLessEqual(len(plan["later"]), 14)
+        self.assertGreater(plan["later_more"], 0)
+
+    def test_completed_path_has_no_today(self):
+        nodes = [_node(id="done", status="completed")]
+        plan = compose_study_plan(nodes)
+        self.assertIsNone(plan["today_node_id"])
+        self.assertEqual(plan["this_week"], [])
+        self.assertIn("complete", plan["headline"].lower())
+
+    def test_revise_action_skips_full_theory(self):
+        node = _node(id="r", node_type="REVISE", status="in_progress")
+        plan = compose_study_plan([node])
+        self.assertIn("Skip a full theory pass", plan["this_week"][0]["action"])
+
+
+class PathConceptRowTests(SimpleTestCase):
+    def test_live_extras_do_not_join_the_path(self):
+        yaml_ids = set(syllabus_concept_map("Physics"))
+        live = [
+            {
+                "concept_id": "newtons_1st_law",
+                "concept_name": "Newton live",
+                "chapter": "Wrong Chapter",
+                "subject": "Physics",
+            },
+            {
+                "concept_id": "openstax_not_in_jee",
+                "concept_name": "Dump",
+                "chapter": "Nuclear Physics",
+                "subject": "Physics",
+            },
+        ]
+        with mock.patch("roadmap.generator._read_live_concepts", return_value=live):
+            rows = _path_concept_rows("Physics")
+        ids = {row["concept_id"] for row in rows}
+        self.assertEqual(ids, yaml_ids)
+        newton = next(row for row in rows if row["concept_id"] == "newtons_1st_law")
+        self.assertEqual(newton["concept_name"], "Newton live")
+        self.assertEqual(newton["chapter"], "Laws of Motion")

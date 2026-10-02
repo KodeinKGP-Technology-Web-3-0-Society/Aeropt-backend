@@ -159,6 +159,9 @@ class StudentProfile(models.Model):
     preferred_depth = models.CharField(max_length=20, choices=PreferredDepth.choices, default=PreferredDepth.STANDARD)
     onboarding_completed = models.BooleanField(default=False)
     onboarding_step = models.SmallIntegerField(default=0)
+    current_streak = models.SmallIntegerField(default=0)
+    highest_streak = models.SmallIntegerField(default=0)
+    last_active_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
