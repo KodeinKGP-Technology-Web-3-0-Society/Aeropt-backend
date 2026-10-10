@@ -75,6 +75,17 @@ from users.serializers import (
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = User.USERNAME_FIELD
 
+    @classmethod
+    def get_token(cls, user):
+        # The agent service trusts only this claim for whose data a request may
+        # touch. SimpleJWT copies refresh-token claims into every access token it
+        # mints, so refreshed tokens keep it.
+        token = super().get_token(user)
+        supabase_user_id = ensure_supabase_user(user, seed_concepts=False)
+        if supabase_user_id:
+            token["supabase_user_id"] = str(supabase_user_id)
+        return token
+
     def validate(self, attrs):
         data = super().validate(attrs)
         user = self.user

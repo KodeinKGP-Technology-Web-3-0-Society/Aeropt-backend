@@ -137,3 +137,37 @@ class OnboardingMilestoneApiTests(APITestCase):
         self.assertTrue(self.profile.onboarding_completed)
         self.assertEqual(self.profile.onboarding_step, 7)
         self.assertIsNotNone(self.session.completed_at)
+
+
+class TokenClaimTests(APITestCase):
+    """The agent service reads `supabase_user_id` from the access token, never from the request body."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="claim@example.com",
+            password="testpass123",
+            full_name="Claim Student",
+        )
+        self.user.supabase_user_id = "11111111-2222-3333-4444-555555555555"
+        self.user.save(update_fields=["supabase_user_id"])
+
+    def _claims(self, token):
+        from rest_framework_simplejwt.tokens import AccessToken
+
+        return AccessToken(token).payload
+
+    def test_login_and_refreshed_access_tokens_carry_the_supabase_id(self):
+        from unittest import mock
+
+        with mock.patch("users.views.ensure_supabase_user", return_value=str(self.user.supabase_user_id)):
+            res = self.client.post(
+                "/api/v1/auth/token/",
+                {"email": "claim@example.com", "password": "testpass123"},
+                format="json",
+            )
+        self.assertEqual(res.status_code, status.HTTP_200_OK, res.content)
+        self.assertEqual(self._claims(res.data["access"])["supabase_user_id"], str(self.user.supabase_user_id))
+
+        refreshed = self.client.post("/api/v1/auth/token/refresh/", {"refresh": res.data["refresh"]}, format="json")
+        self.assertEqual(refreshed.status_code, status.HTTP_200_OK, refreshed.content)
+        self.assertEqual(self._claims(refreshed.data["access"])["supabase_user_id"], str(self.user.supabase_user_id))

@@ -25,12 +25,11 @@ def call_specialist(
         return None
     url = f"{base}/api/v1/classroom/{name}"
     data = json.dumps(body).encode("utf-8")
-    request = urllib.request.Request(
-        url,
-        data=data,
-        headers={"Content-Type": "application/json", "Accept": "application/json"},
-        method="POST",
-    )
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    service_token = os.getenv("AGENT_SERVICE_TOKEN", "").strip()
+    if service_token:
+        headers["X-Agent-Service-Token"] = service_token
+    request = urllib.request.Request(url, data=data, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(request, timeout=_TIMEOUT_S) as response:
             parsed = json.loads(response.read().decode("utf-8"))

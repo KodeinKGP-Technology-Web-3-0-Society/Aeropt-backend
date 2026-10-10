@@ -294,6 +294,8 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 DEV_AUTH_BYPASS = os.getenv("DEV_AUTH_BYPASS", "false").strip().lower() in ("1", "true", "yes", "on")
 DEV_AUTH_BYPASS_USERNAME = os.getenv("DEV_AUTH_BYPASS_USERNAME", "chatbot-dev")
 DEV_AUTH_BYPASS_EMAIL = os.getenv("DEV_AUTH_BYPASS_EMAIL", "chatbot-dev@local.test")
+if DEV_AUTH_BYPASS and not DEBUG:
+    raise ImproperlyConfigured("DEV_AUTH_BYPASS turns off authentication; it is only allowed with DEBUG=True.")
 
 CORS_ALLOWED_ORIGINS = [
     origin.strip()

@@ -88,6 +88,13 @@ image — run them as a release step:
 docker run --rm --env-file .env prepwise-backend python manage.py migrate
 ```
 
+Hosts with no release step (Hugging Face Spaces) set `MIGRATE_ON_START=1` instead;
+`docker-entrypoint.sh` then migrates before gunicorn starts. One instance only.
+
+`AGENT_API_BASE_URL` + `AGENT_SERVICE_TOKEN` let the classroom call the agent's day
+specialists; the token must equal the agent's `AGENT_SERVICE_TOKEN`. Login tokens carry
+a `supabase_user_id` claim, which the agent uses as the caller's identity.
+
 Before deploying, confirm the checklist is clean:
 
 ```bash
