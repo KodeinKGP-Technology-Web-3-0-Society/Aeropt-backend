@@ -56,16 +56,21 @@ There is no Django chatbot. That app is gone.
 ## Run
 
 ```bash
-cp .env.example .env   # SECRET_KEY, DB_PASSWORD or DATABASE_URL, SUPABASE_*
-python -m venv .venv && source .venv/bin/activate
+# 1. Activate environment
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+
+# 2. Configure environment (.env)
+cp .env.example .env
+# Set DATABASE_URL and SUPABASE_* to your cloud User Supabase instance
+
+# 3. Apply migrations
 python manage.py migrate
-make ci
+
+# 4. Start Django REST API (port 8000)
 python manage.py runserver 8000
 ```
 
-`make ci` uses sqlite (`prepwise.ci_settings`) and does not touch live Supabase.
-`make deploy` starts `:8000` if `/api/v1/health/` is down.
 
 ## Deploy
 
