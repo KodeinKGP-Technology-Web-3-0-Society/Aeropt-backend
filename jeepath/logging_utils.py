@@ -1,6 +1,6 @@
 """Request-id aware logging support.
 
-Two pieces, both referenced from ``prepwise.settings.LOGGING``:
+Two pieces, both referenced from ``jeepath.settings.LOGGING``:
 
 * :class:`RequestIDFilter` — stamps every log record with the request id of the
   request being served (``-`` outside a request), so a ``X-Request-ID`` a user
@@ -21,7 +21,7 @@ from contextvars import ContextVar
 
 NO_REQUEST_ID = "-"
 
-_request_id: ContextVar[str] = ContextVar("prepwise_request_id", default=NO_REQUEST_ID)
+_request_id: ContextVar[str] = ContextVar("jeepath_request_id", default=NO_REQUEST_ID)
 
 
 def set_request_id(request_id: str):

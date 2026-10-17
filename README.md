@@ -1,4 +1,4 @@
-# PrepWise — Backend
+# JEEPath — Backend
 
 Django REST API for auth, onboarding, roadmaps, the daily study queue, and
 dashboard analytics. Live tutoring is **not** here: `/chat` goes to
@@ -78,10 +78,10 @@ Container image: multi-stage, non-root (`uid 10001`), gunicorn, `collectstatic`
 at build time, `HEALTHCHECK` on `/api/v1/health/`.
 
 ```bash
-docker build -t prepwise-backend .
+docker build -t jeepath-backend .
 docker run --rm -p 8000:8000 --env-file .env \
   -e DEBUG=False -e BEHIND_TLS=True -e ALLOWED_HOSTS=api.example.com \
-  prepwise-backend
+  jeepath-backend
 curl -fsS localhost:8000/api/v1/health/
 ```
 
@@ -90,7 +90,7 @@ default, override with `WEB_CONCURRENCY`). Migrations are **not** run by the
 image — run them as a release step:
 
 ```bash
-docker run --rm --env-file .env prepwise-backend python manage.py migrate
+docker run --rm --env-file .env jeepath-backend python manage.py migrate
 ```
 
 Hosts with no release step (Hugging Face Spaces) set `MIGRATE_ON_START=1` instead;
@@ -116,13 +116,13 @@ irreversible).
 - **Logging.** `settings.LOGGING` writes one formatted line per record to
   stdout: `<time> <LEVEL> [<request-id>] <logger>: <message>`. Set
   `LOG_FORMAT=json` for one JSON object per line in an aggregator.
-- **Request correlation.** `prepwise.middleware.RequestIDMiddleware` reuses an
+- **Request correlation.** `jeepath.middleware.RequestIDMiddleware` reuses an
   inbound `X-Request-ID` (8–64 chars of `[A-Za-z0-9._-]`) or generates one,
   exposes it as `request.request_id`, returns it in the `X-Request-ID` response
   header, and binds it to every log line of that request. A frontend bug report
   quoting the header maps straight onto backend logs:
   `grep <id> backend.log`.
-- **Throttling.** DRF throttles are global (`prepwise/throttling.py`):
+- **Throttling.** DRF throttles are global (`jeepath/throttling.py`):
   `auth` (per-IP, credential endpoints only), `anon` (per-IP), `user`
   (per-user). Over-limit requests get `429` with `Retry-After`. `/api/v1/health/`
   is exempt. Rates are env-tunable; they are disabled in `ci_settings`.
@@ -156,6 +156,6 @@ Existing keys (`SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `DATABASE_URL` /
 | `THROTTLE_AUTH_RATE` | `20/min` | Per-IP limit on `auth/register/`, `auth/token/`, `auth/token/refresh/`. |
 | `THROTTLE_ANON_RATE` | `60/min` | Per-IP limit for unauthenticated requests. |
 | `THROTTLE_USER_RATE` | `600/min` | Per-user limit. Frontend caches reads for 30 s–10 min (`src/lib/apiCache.ts`), so normal use is orders of magnitude below this. |
-| `CI_HARDENING_LIVE` | unset | `prepwise.ci_settings` only: keep the real logging levels and throttle rates instead of the CI-relaxed ones, so the hardening can be exercised against throwaway sqlite (`CI_HARDENING_LIVE=1 DJANGO_SETTINGS_MODULE=prepwise.ci_settings python manage.py runserver 8011`). |
+| `CI_HARDENING_LIVE` | unset | `jeepath.ci_settings` only: keep the real logging levels and throttle rates instead of the CI-relaxed ones, so the hardening can be exercised against throwaway sqlite (`CI_HARDENING_LIVE=1 DJANGO_SETTINGS_MODULE=jeepath.ci_settings python manage.py runserver 8011`). |
 | `PORT` / `GUNICORN_BIND` | `8000` / `0.0.0.0:$PORT` | Bind address. |
 | `WEB_CONCURRENCY` | `2 * cpu + 1` | Gunicorn workers. Also `GUNICORN_THREADS`, `GUNICORN_TIMEOUT`, `GUNICORN_MAX_REQUESTS`, `GUNICORN_LOG_LEVEL`, `GUNICORN_ACCESS_LOG`, `GUNICORN_PRELOAD`. |

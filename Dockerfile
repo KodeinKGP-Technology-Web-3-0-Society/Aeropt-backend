@@ -1,6 +1,6 @@
-# Prepwise Django API — multi-stage, non-root, gunicorn.
-#   docker build -t prepwise-backend .
-#   docker run --rm -p 8000:8000 --env-file .env prepwise-backend
+# JEEPath Django API — multi-stage, non-root, gunicorn.
+#   docker build -t jeepath-backend .
+#   docker run --rm -p 8000:8000 --env-file .env jeepath-backend
 
 # ---------------------------------------------------------------------------
 # Stage 1 — resolve dependencies into wheels
@@ -28,12 +28,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    DJANGO_SETTINGS_MODULE=prepwise.settings \
+    DJANGO_SETTINGS_MODULE=jeepath.settings \
     PORT=8000
 
 # psycopg2-binary bundles libpq, so the runtime needs no system packages and no
 # apt layer at all.
-RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin prepwise
+RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin jeepath
 
 WORKDIR /app
 
@@ -48,9 +48,9 @@ COPY . .
 RUN SECRET_KEY=build-only DEBUG=False \
     DB_PASSWORD=build-only DB_HOST=localhost \
     python manage.py collectstatic --noinput \
- && chown -R prepwise:prepwise /app/staticfiles
+ && chown -R jeepath:jeepath /app/staticfiles
 
-USER prepwise
+USER jeepath
 
 EXPOSE 8000
 
@@ -60,4 +60,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD ["python", "-c", "import os,urllib.request;urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('PORT','8000')+'/api/v1/health/',timeout=4).read()"]
 
 ENTRYPOINT ["/bin/sh", "/app/docker-entrypoint.sh"]
-CMD ["gunicorn", "-c", "gunicorn.conf.py", "prepwise.wsgi:application"]
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "jeepath.wsgi:application"]

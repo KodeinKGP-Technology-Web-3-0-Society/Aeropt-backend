@@ -23,7 +23,7 @@ else
 fi
 
 unset DJANGO_SETTINGS_MODULE
-export DJANGO_SETTINGS_MODULE=prepwise.settings
+export DJANGO_SETTINGS_MODULE=jeepath.settings
 
 echo "==> [backend] starting runserver on :${PORT}"
 nohup "$PYTHON" manage.py runserver "127.0.0.1:${PORT}" \

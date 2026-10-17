@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local + GitHub CI for Aeropt-backend. Uses sqlite (prepwise.ci_settings), not live Postgres.
+# Local + GitHub CI for Aeropt-backend. Uses sqlite (jeepath.ci_settings), not live Postgres.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -13,11 +13,11 @@ else
   PYTHON="${PYTHON:-python3}"
 fi
 
-export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-prepwise.ci_settings}"
+export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-jeepath.ci_settings}"
 
 echo "==> [backend] syntax"
 "$PYTHON" -m compileall -q -x '(\.venv|venv)' \
-  prepwise users apis analytics roadmap sandbox classroom manage.py
+  jeepath users apis analytics roadmap sandbox classroom manage.py
 
 echo "==> [backend] django check"
 "$PYTHON" manage.py check

@@ -1,7 +1,7 @@
 """Isolated Django settings for local/GitHub CI.
 
 Never points at live Supabase. Import this via DJANGO_SETTINGS_MODULE, not
-by running the app — local CD uses prepwise.settings and the real .env.
+by running the app — local CD uses jeepath.settings and the real .env.
 """
 
 import os
@@ -16,7 +16,7 @@ os.environ.setdefault("DB_SSLMODE", "disable")
 os.environ["SUPABASE_URL"] = ""
 os.environ["SUPABASE_KEY"] = ""
 
-from prepwise.settings import *  # noqa: E402,F401
+from jeepath.settings import *  # noqa: E402,F401
 
 DATABASES = {
     "default": {
@@ -30,12 +30,12 @@ SUPABASE_KEY = ""
 
 # CI relaxes two production policies, unless CI_HARDENING_LIVE=1. Set that flag
 # to run a throwaway sqlite server with the real logging/throttling policy:
-#   CI_HARDENING_LIVE=1 DJANGO_SETTINGS_MODULE=prepwise.ci_settings \
+#   CI_HARDENING_LIVE=1 DJANGO_SETTINGS_MODULE=jeepath.ci_settings \
 #       python manage.py runserver 8011 --noreload
 if os.getenv("CI_HARDENING_LIVE", "").strip().lower() not in ("1", "true", "yes", "on"):
     # Throttling off: the suite fires hundreds of requests from one IP and a
     # handful of users within seconds, which is exactly what the limits exist to
-    # stop. prepwise/tests_hardening.py re-enables them per test, so the policy
+    # stop. jeepath/tests_hardening.py re-enables them per test, so the policy
     # itself is still covered.
     REST_FRAMEWORK = {
         **REST_FRAMEWORK,

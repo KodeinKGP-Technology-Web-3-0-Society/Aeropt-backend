@@ -1,7 +1,7 @@
-"""Gunicorn configuration for the Prepwise Django API.
+"""Gunicorn configuration for the JEEPath Django API.
 
 Used by the Dockerfile CMD; also works locally:
-    gunicorn -c gunicorn.conf.py prepwise.wsgi:application
+    gunicorn -c gunicorn.conf.py jeepath.wsgi:application
 """
 
 import multiprocessing
@@ -31,7 +31,7 @@ max_requests_jitter = int(os.getenv("GUNICORN_MAX_REQUESTS_JITTER", "100"))
 
 # Django's LOGGING owns application logs; gunicorn only reports its own lifecycle
 # and access lines. Access logging is off by default because
-# prepwise.middleware.RequestIDMiddleware already logs one correlated line per
+# jeepath.middleware.RequestIDMiddleware already logs one correlated line per
 # request; set GUNICORN_ACCESS_LOG=- to turn gunicorn's own back on.
 accesslog = os.getenv("GUNICORN_ACCESS_LOG") or None
 access_log_format = '%(h)s "%(r)s" %(s)s %(b)s %(M)sms "%({x-request-id}o)s"'

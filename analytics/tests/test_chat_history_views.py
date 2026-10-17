@@ -1,6 +1,6 @@
 """Chat-history endpoints.
 
-CI runs with SUPABASE_URL/KEY blanked (`prepwise.ci_settings`), so the
+CI runs with SUPABASE_URL/KEY blanked (`jeepath.ci_settings`), so the
 unconfigured path is the default here; the configured paths are exercised by
 patching the two module-level readers rather than by touching any live project.
 """
