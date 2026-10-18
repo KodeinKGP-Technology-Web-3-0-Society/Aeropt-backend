@@ -1,6 +1,7 @@
 import logging
 
 from django.utils import timezone as django_timezone
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -10,6 +11,29 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apis.viewsets import BaseModelViewSet, UserPrimaryKeyViewSet, UserScopedViewSet
+from users.serializers import (
+    AchievementSerializer,
+    AuthSessionSerializer,
+    LeaderboardEntrySerializer,
+    LogoutRequestSerializer,
+    MeSerializer,
+    NotificationSerializer,
+    OAuthAccountSerializer,
+    OnboardingChaptersSerializer,
+    OnboardingCompleteRequestSerializer,
+    OnboardingCompleteResponseSerializer,
+    OnboardingSessionSerializer,
+    PlacementPlanRequestSerializer,
+    PlacementPlanSerializer,
+    PlanSerializer,
+    RegisterSerializer,
+    StudentProfileSerializer,
+    SubscriptionSerializer,
+    SyllabusPlacementSerializer,
+    UserAchievementSerializer,
+    UserPreferencesSerializer,
+    UserSerializer,
+)
 from users.models import (
     AccountStatus,
     Achievement,
@@ -26,9 +50,11 @@ from users.models import (
     UserPreferences,
 )
 
+
 class LeaderboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: LeaderboardEntrySerializer(many=True)})
     def get(self, request):
         top_profiles = StudentProfile.objects.select_related("user").order_by("-current_streak", "-highest_streak")[:10]
         data = []
@@ -55,21 +81,6 @@ from apis.cache_layer import (
 )
 
 logger = logging.getLogger(__name__)
-from users.serializers import (
-    AchievementSerializer,
-    AuthSessionSerializer,
-    NotificationSerializer,
-    OAuthAccountSerializer,
-    OnboardingSessionSerializer,
-    PlanSerializer,
-    RegisterSerializer,
-    StudentProfileSerializer,
-    SubscriptionSerializer,
-    SyllabusPlacementSerializer,
-    UserAchievementSerializer,
-    UserPreferencesSerializer,
-    UserSerializer,
-)
 
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -93,7 +104,8 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
             raise serializers.ValidationError("This account is not active.")
         if not user.is_active:
             raise serializers.ValidationError("This account has been disabled.")
-        supabase_user_id = ensure_supabase_user(user, seed_concepts=False)
+        # get_token already linked the Supabase user. A second call repeats that HTTP lookup.
+        supabase_user_id = str(user.supabase_user_id) if user.supabase_user_id else None
         data["supabase_user_id"] = supabase_user_id
         data["user"] = {
             "id": str(user.id),
@@ -238,6 +250,7 @@ class TokenRefreshViewAlias(TokenRefreshView):
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(request=RegisterSerializer, responses={201: UserSerializer})
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -267,6 +280,7 @@ def _profile_payload(user: User) -> dict:
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: MeSerializer})
     def get(self, request):
         user = request.user
         supabase_user_id = ensure_supabase_user(user, seed_concepts=False)
@@ -283,9 +297,16 @@ class MeView(APIView):
 class OnboardingChaptersView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: OnboardingChaptersSerializer})
     def get(self, request):
+        from users.chapter_units import SUBJECT_UNITS
+
         chapters = get_or_set(chapters_key(), TTL_CHAPTERS, get_physics_chapters_metadata)
-        return Response({"chapters": chapters})
+        subjects = [
+            {"name": subj_name, "units": units_list}
+            for subj_name, units_list in SUBJECT_UNITS.items()
+        ]
+        return Response({"chapters": chapters, "subjects": subjects})
 
 
 class OnboardingPlacementPlanView(APIView):
@@ -293,6 +314,7 @@ class OnboardingPlacementPlanView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=PlacementPlanRequestSerializer, responses={200: PlacementPlanSerializer})
     def post(self, request):
         body = request.data if isinstance(request.data, dict) else {}
         plan = build_placement_plan(
@@ -308,6 +330,10 @@ class OnboardingCompleteView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=OnboardingCompleteRequestSerializer,
+        responses={200: OnboardingCompleteResponseSerializer},
+    )
     def post(self, request):
         user = request.user
         profile, _ = StudentProfile.objects.get_or_create(user=user)
@@ -406,6 +432,7 @@ class OnboardingCompleteView(APIView):
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=LogoutRequestSerializer, responses={205: None})
     def post(self, request):
         refresh_token = request.data.get("refresh")
         if not refresh_token:
