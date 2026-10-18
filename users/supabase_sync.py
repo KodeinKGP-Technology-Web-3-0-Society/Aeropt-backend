@@ -74,46 +74,18 @@ def _batch_create_user_concept_states(client, rows: List[Dict[str, Any]]) -> Non
 
 
 def _upsert_user_concept_states(client, rows: List[Dict[str, Any]]) -> None:
-    """
-    Apply placement seed without DELETE (service_role may lack delete on this table).
+    """Insert or update placement rows in one request.
 
-    Updates existing (user_id, concept_id) rows; inserts any missing concepts.
+    The table is keyed by (user_id, concept_id). service_role cannot delete,
+    so a re-seed must not wipe the table. One upsert covers both new concepts
+    and existing ones; a per-row update was one HTTP call per concept.
     """
     if not rows:
         return
-
-    user_id = rows[0]["user_id"]
-    existing_res = (
-        client.table("user_concept_state")
-        .select("concept_id")
-        .eq("user_id", user_id)
-        .execute()
-    )
-    existing_ids = {r["concept_id"] for r in (existing_res.data or [])}
-
-    to_insert = [r for r in rows if r["concept_id"] not in existing_ids]
-    to_update = [r for r in rows if r["concept_id"] in existing_ids]
-
-    if to_insert:
-        client.table("user_concept_state").insert(to_insert).execute()
-
-    seed_fields = (
-        "subject",
-        "chapter",
-        "proficiency_score",
-        "attempts",
-        "correct",
-        "flagged_weak",
-        "struggle_streak",
-        "error_type_dist",
-        "avg_time_seconds",
-        "is_cold_start",
-    )
-    for row in to_update:
-        updates = {field: row[field] for field in seed_fields if field in row}
-        client.table("user_concept_state").update(updates).eq("user_id", user_id).eq(
-            "concept_id", row["concept_id"]
-        ).execute()
+    client.table("user_concept_state").upsert(
+        rows,
+        on_conflict="user_id,concept_id",
+    ).execute()
 
 
 def sync_profile_to_supabase(user) -> None:
