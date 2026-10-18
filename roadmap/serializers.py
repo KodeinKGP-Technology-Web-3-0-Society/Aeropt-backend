@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from roadmap.models import LearningPath, PathNode, PathProgress
@@ -68,6 +69,7 @@ class PathNodeSerializer(serializers.ModelSerializer):
             node_type=obj.node_type,
         )
 
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
     def get_proficiency_pct(self, obj: PathNode):
         pct, _ = self._display(obj)
         return pct
@@ -106,6 +108,7 @@ class LearningPathSerializer(serializers.ModelSerializer):
             return 0
         return round((completed / obj.total_nodes) * 100)
 
+    @extend_schema_field(PathNodeSerializer(allow_null=True))
     def get_current_node(self, obj: LearningPath):
         node = (
             obj.nodes.filter(status="in_progress").order_by("sequence_index").first()
@@ -133,6 +136,15 @@ class PathProgressUpdateSerializer(serializers.Serializer):
     node_id = serializers.UUIDField()
     status = serializers.ChoiceField(choices=["in_progress", "completed", "skipped", "pending"])
     proficiency_pct = serializers.IntegerField(required=False, min_value=0, max_value=100)
+
+
+class RoadmapSubjectsSerializer(serializers.Serializer):
+    subjects = serializers.ListField(child=serializers.CharField())
+
+
+class RoadmapProgressResponseSerializer(serializers.Serializer):
+    node = PathNodeSerializer()
+    roadmap = LearningPathSerializer()
 
 
 class PathProgressSerializer(serializers.ModelSerializer):

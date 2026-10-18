@@ -106,10 +106,10 @@ Before deploying, confirm the checklist is clean:
 DEBUG=False BEHIND_TLS=True python manage.py check --deploy
 ```
 
-The only warnings expected there are `drf_spectacular.W002` (APIViews without a
-declared serializer — cosmetic, schema-only) and `security.W021`
-(`SECURE_HSTS_PRELOAD`, deliberately opt-in because HSTS preload is effectively
-irreversible).
+The warning expected there is `security.W021` (`SECURE_HSTS_PRELOAD`, deliberately
+opt-in because HSTS preload is effectively irreversible). `security.W009` also
+appears when `SECRET_KEY` is still the generated default. API views declare a
+serializer, so `drf_spectacular.W002` should not.
 
 ### Operations
 
