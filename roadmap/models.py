@@ -39,7 +39,9 @@ class LearningPath(models.Model):
         db_table = "learning_paths"
         ordering = ("-updated_at",)
         indexes = [
-            models.Index(fields=["user", "subject", "is_active"]),
+            # Pinned to 0001. Django's automatic index hash changed, and an
+            # unnamed index makes makemigrations emit a no-op RenameIndex.
+            models.Index(fields=["user", "subject", "is_active"], name="learning_pa_user_id_6f0f0d_idx"),
         ]
 
     def __str__(self):
@@ -68,7 +70,7 @@ class PathNode(models.Model):
         ordering = ("sequence_index",)
         unique_together = (("learning_path", "concept_id"),)
         indexes = [
-            models.Index(fields=["learning_path", "status"]),
+            models.Index(fields=["learning_path", "status"], name="path_nodes_learnin_5fd0b1_idx"),
         ]
 
     def __str__(self):
