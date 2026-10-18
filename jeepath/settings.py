@@ -402,7 +402,7 @@ LOGGING = {
         "jeepath": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
         **{
             app: {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False}
-            for app in ("users", "apis", "analytics", "roadmap", "sandbox")
+            for app in ("users", "apis", "analytics", "roadmap", "sandbox", "classroom")
         },
     },
 }
