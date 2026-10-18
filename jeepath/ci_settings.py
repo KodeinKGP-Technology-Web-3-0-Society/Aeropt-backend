@@ -12,9 +12,10 @@ os.environ.setdefault("ALLOWED_HOSTS", "localhost,127.0.0.1")
 os.environ.setdefault("DB_PASSWORD", "ci")
 os.environ.setdefault("DB_HOST", "127.0.0.1")
 os.environ.setdefault("DB_SSLMODE", "disable")
-# Never talk to live Supabase from CI, even if Aeropt-backend/.env exists.
+# Never talk to live Supabase or live agent from CI, even if Aeropt-backend/.env exists.
 os.environ["SUPABASE_URL"] = ""
 os.environ["SUPABASE_KEY"] = ""
+os.environ["AGENT_API_BASE_URL"] = ""
 
 from jeepath.settings import *  # noqa: E402,F401
 
@@ -27,6 +28,7 @@ DATABASES = {
 
 SUPABASE_URL = ""
 SUPABASE_KEY = ""
+AGENT_API_BASE_URL = ""
 
 # CI relaxes two production policies, unless CI_HARDENING_LIVE=1. Set that flag
 # to run a throwaway sqlite server with the real logging/throttling policy:

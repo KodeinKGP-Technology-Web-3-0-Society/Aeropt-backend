@@ -23,7 +23,8 @@ _SYLLABUS_FILES: Dict[str, str] = {
 
 @lru_cache(maxsize=None)
 def load_syllabus(subject: str = "Physics") -> Dict[str, Any]:
-    filename = _SYLLABUS_FILES.get(subject)
+    subj_key = "Maths" if subject == "Mathematics" else subject
+    filename = _SYLLABUS_FILES.get(subj_key)
     if not filename:
         return {"subject": subject, "chapters": []}
     path = _DATA_DIR / filename

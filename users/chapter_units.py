@@ -17,6 +17,7 @@ UNIT_ORDER = [
 
 # Canonical JEE Physics chapter → unit. Unknown live chapters fall through to yaml unit or Other.
 CHAPTER_TO_UNIT: Dict[str, str] = {
+    # Physics
     "Laws of Motion": "Mechanics",
     "Work Energy & Power": "Mechanics",
     "Rotational Motion": "Mechanics",
@@ -49,6 +50,63 @@ CHAPTER_TO_UNIT: Dict[str, str] = {
     "Nuclei": "Modern Physics",
     "Semiconductor": "Modern Physics",
     "Modern Physics": "Modern Physics",
+    # Chemistry
+    "Mole Concept & Stoichiometry": "Physical Chemistry",
+    "Atomic Structure": "Physical Chemistry",
+    "States of Matter": "Physical Chemistry",
+    "Chemical Thermodynamics & Energetics": "Physical Chemistry",
+    "Chemical & Ionic Equilibrium": "Physical Chemistry",
+    "Redox Reactions & Electrochemistry": "Physical Chemistry",
+    "Chemical Kinetics": "Physical Chemistry",
+    "Solid State & Solutions": "Physical Chemistry",
+    "Surface Chemistry & Metallurgy": "Physical Chemistry",
+    "Periodic Table & Periodicity": "Inorganic Chemistry",
+    "Chemical Bonding & Molecular Structure": "Inorganic Chemistry",
+    "Coordination Compounds": "Inorganic Chemistry",
+    "General Organic Chemistry & Hydrocarbons": "Organic Chemistry",
+    "Haloalkanes, Alcohols & Ethers": "Organic Chemistry",
+    "Aldehydes, Ketones & Carboxylic Acids": "Organic Chemistry",
+    "Nitrogen Compounds & Biomolecules": "Organic Chemistry",
+    # Mathematics
+    "Quadratic Equations": "Algebra",
+    "Sequences & Series": "Algebra",
+    "Complex Numbers": "Algebra",
+    "Permutations & Combinations": "Algebra",
+    "Binomial Theorem": "Algebra",
+    "Matrices & Determinants": "Algebra",
+    "Trigonometric Ratios & Identities": "Trigonometry",
+    "Straight Lines & Circles": "Coordinate Geometry",
+    "Conic Sections": "Coordinate Geometry",
+    "Functions, Limits & Continuity": "Calculus",
+    "Differentiation & Applications": "Calculus",
+    "Integration": "Calculus",
+    "Vectors & 3D Geometry": "Vectors & 3D",
+    "Probability & Statistics": "Probability & Statistics",
+}
+
+SUBJECT_UNITS: Dict[str, List[Dict[str, Any]]] = {
+    "Physics": [
+        {"name": "Mechanics", "chapters": ["Laws of Motion", "Work Energy & Power", "Rotational Motion", "Kinematics", "Units and Dimensions", "Vectors", "Centre of Mass", "Gravitation", "Fluid Mechanics", "Properties of Matter", "Simple Harmonic Motion"]},
+        {"name": "Thermodynamics", "chapters": ["Thermal Properties", "Thermodynamics", "Kinetic Theory"]},
+        {"name": "Waves & Sound", "chapters": ["Waves", "Sound"]},
+        {"name": "Optics", "chapters": ["Wave Optics", "Ray Optics", "Optics"]},
+        {"name": "Electrostatics & Current", "chapters": ["Electrostatics", "Current Electricity", "Capacitance"]},
+        {"name": "Magnetism & EMI", "chapters": ["Magnetism", "Magnetic Effects of Current", "Electromagnetic Induction", "Alternating Current", "Electromagnetic Waves"]},
+        {"name": "Modern Physics", "chapters": ["Dual Nature of Radiation", "Atoms", "Nuclei", "Semiconductor", "Modern Physics"]},
+    ],
+    "Chemistry": [
+        {"name": "Physical Chemistry", "chapters": ["Mole Concept & Stoichiometry", "Atomic Structure", "States of Matter", "Chemical Thermodynamics & Energetics", "Chemical & Ionic Equilibrium", "Redox Reactions & Electrochemistry", "Chemical Kinetics", "Solid State & Solutions", "Surface Chemistry & Metallurgy"]},
+        {"name": "Inorganic Chemistry", "chapters": ["Periodic Table & Periodicity", "Chemical Bonding & Molecular Structure", "Coordination Compounds"]},
+        {"name": "Organic Chemistry", "chapters": ["General Organic Chemistry & Hydrocarbons", "Haloalkanes, Alcohols & Ethers", "Aldehydes, Ketones & Carboxylic Acids", "Nitrogen Compounds & Biomolecules"]},
+    ],
+    "Mathematics": [
+        {"name": "Algebra", "chapters": ["Quadratic Equations", "Sequences & Series", "Complex Numbers", "Permutations & Combinations", "Binomial Theorem", "Matrices & Determinants"]},
+        {"name": "Trigonometry", "chapters": ["Trigonometric Ratios & Identities"]},
+        {"name": "Coordinate Geometry", "chapters": ["Straight Lines & Circles", "Conic Sections"]},
+        {"name": "Calculus", "chapters": ["Functions, Limits & Continuity", "Differentiation & Applications", "Integration"]},
+        {"name": "Vectors & 3D", "chapters": ["Vectors & 3D Geometry"]},
+        {"name": "Probability & Statistics", "chapters": ["Probability & Statistics"]},
+    ],
 }
 
 
