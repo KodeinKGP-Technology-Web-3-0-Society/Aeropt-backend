@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.test import TestCase
 from rest_framework.test import APITestCase
 
@@ -57,6 +58,7 @@ class EvidenceApiTests(APITestCase):
         _path(self.user, proficiency=80)
         seed_from_paths(LearningPath, ConceptTracker)
         self.client.force_authenticate(self.user)
+        cache.clear()
 
     def test_attempt_with_mastery_moves_home_and_not_a_second_score(self):
         before = ConceptMastery.objects.count()
@@ -87,6 +89,26 @@ class EvidenceApiTests(APITestCase):
         self.assertEqual(home.data["revise"][0]["concept_id"], "torque")
         self.assertEqual(home.data["revise"][0]["due"], "today")
         self.assertEqual(home.data["readiness"], {"score": 30, "label": "early"})
+
+    def test_cached_home_follows_a_later_evidence_write(self):
+        first = self.client.get("/api/v1/classroom/home/")
+        torque = next(item for item in first.data["map"] if item["concept_id"] == "torque")
+        self.assertEqual(torque["mastery"], 80)
+        res = self.client.post(
+            "/api/v1/classroom/evidence/",
+            {
+                "concept_id": "torque",
+                "surface": "lesson",
+                "specialist": "tutor",
+                "kind": "mastery",
+                "payload": {"mastery": 30},
+            },
+            format="json",
+        )
+        self.assertEqual(res.status_code, 201)
+        second = self.client.get("/api/v1/classroom/home/")
+        torque = next(item for item in second.data["map"] if item["concept_id"] == "torque")
+        self.assertEqual(torque["mastery"], 30)
 
     def test_mastery_event_sets_score_without_counting_an_attempt(self):
         res = self.client.post(
@@ -175,7 +197,7 @@ class EvidenceApiTests(APITestCase):
         )
         self.client.force_authenticate(self.other)
         home = self.client.get("/api/v1/classroom/home/")
-        self.assertEqual(home.data["map"], [])
+        self.assertEqual([m for m in home.data["map"] if m.get("mastery", 0) > 0], [])
         self.assertEqual(home.data["revise"], [])
         self.assertEqual(home.data["readiness"]["score"], 0)
 
@@ -204,6 +226,7 @@ class DaySpecialistHomeTests(APITestCase):
         )
         _path(self.user, proficiency=40)
         self.client.force_authenticate(self.user)
+        cache.clear()
 
     def test_stored_today_plan_and_readiness_win(self):
         from django.utils import timezone
@@ -259,9 +282,33 @@ class DaySpecialistHomeTests(APITestCase):
         self.assertTrue(home.data["today"]["provisional"])
 
     def test_complete_omits_todays_concept(self):
+        warm = self.client.get("/api/v1/classroom/home/")
+        self.assertEqual(warm.data["today"]["concept_id"], "torque")
         res = self.client.post("/api/v1/classroom/today/torque/complete/", {}, format="json")
         self.assertEqual(res.status_code, 200)
         self.assertIsNone(res.data["today"])
+        again = self.client.get("/api/v1/classroom/home/")
+        self.assertIsNone(again.data["today"])
+
+    def test_home_loads_the_active_path_once_and_caches_the_payload(self):
+        from unittest.mock import patch
+
+        from classroom.views import _provisional_home
+        from roadmap.generator import get_active_learning_path as real_get_path
+
+        with (
+            patch("classroom.views.get_active_learning_path", wraps=real_get_path) as loaded,
+            patch("roadmap.generator.get_active_learning_path", wraps=real_get_path) as loaded_again,
+            patch("classroom.views._provisional_home", wraps=_provisional_home) as built,
+        ):
+            first = self.client.get("/api/v1/classroom/home/")
+            second = self.client.get("/api/v1/classroom/home/")
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.data, first.data)
+        self.assertEqual(loaded.call_count, 1)
+        self.assertEqual(loaded_again.call_count, 0)
+        self.assertEqual(built.call_count, 1)
 
     def test_agent_fill_is_stored_and_not_repeated(self):
         from unittest.mock import patch

@@ -1,12 +1,23 @@
 from datetime import date, timedelta
 
+from django.db.models import prefetch_related_objects
+from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from typing import Any, Dict, List, Optional
+from apis.cache_layer import TTL_CLASSROOM_HOME, classroom_home_key, get_or_set
 from apis.models import Concept
 from classroom.day import overlay_specialists, record_today_decision
 from classroom.models import ClassroomSession, ConceptTracker
+from classroom.serializers import (
+    CalendarEntrySerializer,
+    ClassroomEvidenceRequestSerializer,
+    ClassroomEvidenceSerializer,
+    ClassroomHomeSerializer,
+    ClassroomSessionRequestSerializer,
+    ClassroomSessionSerializer,
+)
 from classroom.tracker import EvidenceError, apply_evidence
 from roadmap.generator import get_active_learning_path, generate_learning_path
 from roadmap.models import NodeStatus
@@ -22,8 +33,8 @@ def _concept_public_id(concept) -> str:
     slug = (getattr(concept, "slug", None) or "").strip()
     return slug if slug else str(concept.id)
 
-def _build_today(user) -> Optional[Dict[str, Any]]:
-    queue = build_action_queue(user)
+def _build_today(user, path) -> Optional[Dict[str, Any]]:
+    queue = build_action_queue(user, path=path)
     if not queue:
         return None
     card = queue[0]
@@ -34,21 +45,23 @@ def _build_today(user) -> Optional[Dict[str, Any]]:
         "minutes": int(card.get("duration_min") or 25),
     }
 
-def _build_plan(user, limit: int = 5) -> List[Dict[str, Any]]:
+def _open_path_nodes(path) -> List[Any]:
+    closed = {NodeStatus.SKIPPED, NodeStatus.COMPLETED, "completed"}
+    nodes = [node for node in path.nodes.all() if node.status not in closed]
+    nodes.sort(key=lambda node: node.sequence_index)
+    return nodes
+
+
+def _build_plan(user, limit: int = 5, path=None) -> List[Dict[str, Any]]:
     """Return only the agent-decided window (next `limit` concepts).
 
     Students never see all 133 nodes. The agent picks the window:
     the in-progress node + the next (limit-1) pending nodes in sequence order.
     """
-    path = get_active_learning_path(user)
-    if not path:
+    if path is None:
         return []
 
-    # Only non-skipped, non-completed nodes ordered by sequence
-    open_nodes = list(
-        path.nodes.exclude(status__in=[NodeStatus.SKIPPED, "completed"])
-        .order_by("sequence_index")
-    )
+    open_nodes = _open_path_nodes(path)
     if not open_nodes:
         return []
 
@@ -108,8 +121,9 @@ def _readiness_label(score: int) -> str:
     return "ready"
 
 
-def _build_map(user) -> List[Dict[str, Any]]:
-    path = get_active_learning_path(user)
+def _build_map(user, path) -> List[Dict[str, Any]]:
+    if not path:
+        return []
     path_nodes = list(path.nodes.all()) if path else []
     trackers = _trackers_by_concept(user)
 
@@ -290,23 +304,27 @@ def _build_subject_mastery(user) -> List[Dict[str, Any]]:
     return result
 
 
-def _ensure_learning_path(user) -> None:
-    """Auto-generate a learning path if the user has none (first visit)."""
-    from roadmap.generator import get_active_learning_path, generate_learning_path
+def _ensure_learning_path(user):
+    """Return the active path, generating one on the first visit."""
     path = get_active_learning_path(user, subject="Physics")
+    if path is not None:
+        return path
+    try:
+        path = generate_learning_path(user, subject="Physics")
+    except Exception:
+        return None
     if path is None:
-        try:
-            generate_learning_path(user, subject="Physics")
-        except Exception:
-            pass  # Best effort
+        return None
+    prefetch_related_objects([path], "nodes")
+    return path
 
 
 def _provisional_home(user) -> Dict[str, Any]:
-    _ensure_learning_path(user)
-    map_data = _build_map(user)
+    path = _ensure_learning_path(user)
+    map_data = _build_map(user, path)
     return {
-        "today": _build_today(user),
-        "plan": _build_plan(user),
+        "today": _build_today(user, path),
+        "plan": _build_plan(user, path=path),
         "map": map_data,
         "revise": _build_revise(user),
         "readiness": _build_readiness(user),
@@ -316,11 +334,20 @@ def _provisional_home(user) -> Dict[str, Any]:
     }
 
 
+def _cached_home(user) -> Dict[str, Any]:
+    return get_or_set(
+        classroom_home_key(user),
+        TTL_CLASSROOM_HOME,
+        lambda: overlay_specialists(user, _provisional_home(user)),
+    )
+
+
 class ClassroomHomeView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: ClassroomHomeSerializer})
     def get(self, request):
-        return Response(overlay_specialists(request.user, _provisional_home(request.user)))
+        return Response(_cached_home(request.user))
 
 
 class ClassroomEvidenceView(APIView):
@@ -328,6 +355,10 @@ class ClassroomEvidenceView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=ClassroomEvidenceRequestSerializer,
+        responses={201: ClassroomEvidenceSerializer},
+    )
     def post(self, request):
         try:
             event = apply_evidence(request.user, request.data)
@@ -344,12 +375,13 @@ class TodayDecisionView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=None, responses={200: ClassroomHomeSerializer})
     def post(self, request, concept_id: str, decision: str):
         concept_id = (concept_id or "").strip()
         if decision not in ("complete", "dismiss") or not concept_id:
             return Response({"detail": "unknown today decision"}, status=400)
         record_today_decision(request.user, concept_id, decision)
-        return Response(overlay_specialists(request.user, _provisional_home(request.user)))
+        return Response(_cached_home(request.user))
 
 
 def _session_payload(row: ClassroomSession) -> Dict[str, str]:
@@ -395,6 +427,10 @@ class ClassroomSessionView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=ClassroomSessionRequestSerializer,
+        responses={200: ClassroomSessionSerializer},
+    )
     def post(self, request):
         surface = str(request.data.get("surface") or "").strip().lower()
         concept_id = str(request.data.get("concept_id") or "").strip()
@@ -410,6 +446,7 @@ class ClassroomSessionView(APIView):
 class ClassroomSessionLookupView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: ClassroomSessionSerializer})
     def get(self, request, agent_session_id: str):
         row = ClassroomSession.objects.filter(
             user=request.user, agent_session_id=agent_session_id
@@ -421,6 +458,7 @@ class ClassroomSessionLookupView(APIView):
 class CalendarAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: CalendarEntrySerializer(many=True)})
     def get(self, request):
         path = get_active_learning_path(request.user)
         if not path:

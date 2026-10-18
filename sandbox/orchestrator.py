@@ -7,19 +7,30 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
+# Distinguishes "caller did not load a path" from "caller already knows there is none".
+_PATH_UNSET = object()
 
-def _roadmap_current(user) -> Optional[Dict[str, Any]]:
+
+def _nodes_with_status(path, status: str):
+    return sorted(
+        (node for node in path.nodes.all() if node.status == status),
+        key=lambda node: node.sequence_index,
+    )
+
+
+def _roadmap_current(user, path=_PATH_UNSET) -> Optional[Dict[str, Any]]:
     try:
-        from roadmap.generator import get_active_learning_path
         from roadmap.models import NodeStatus
 
-        path = get_active_learning_path(user)
+        if path is _PATH_UNSET:
+            from roadmap.generator import get_active_learning_path
+
+            path = get_active_learning_path(user)
         if not path:
             return None
-        node = (
-            path.nodes.filter(status=NodeStatus.IN_PROGRESS).order_by("sequence_index").first()
-            or path.nodes.filter(status=NodeStatus.PENDING).order_by("sequence_index").first()
-        )
+        in_progress = _nodes_with_status(path, NodeStatus.IN_PROGRESS)
+        pending = _nodes_with_status(path, NodeStatus.PENDING)
+        node = (in_progress[0] if in_progress else None) or (pending[0] if pending else None)
         if not node:
             return None
         return {
@@ -126,10 +137,26 @@ def _pack_queue_to_goal(queue: List[Dict[str, Any]], daily_goal: int) -> List[Di
     return sorted(packed, key=lambda item: item.get("priority", 50))
 
 
-def build_action_queue(user) -> List[Dict[str, Any]]:
-    """Build an ordered proactive queue from roadmap position (no static seed data)."""
+def build_action_queue(user, path=_PATH_UNSET) -> List[Dict[str, Any]]:
+    """Build an ordered proactive queue from roadmap position (no static seed data).
+
+    Pass `path` when the caller already loaded the active learning path.
+    Omit it to load that path once. `None` means the caller already checked
+    and there is no active path.
+    """
     queue: List[Dict[str, Any]] = []
-    current = _roadmap_current(user)
+    if path is _PATH_UNSET:
+        try:
+            from roadmap.generator import get_active_learning_path
+
+            path = get_active_learning_path(user)
+        except Exception:
+            logger.exception(
+                "Failed to retrieve current roadmap position for user %s",
+                getattr(user, "pk", user),
+            )
+            return queue
+    current = _roadmap_current(user, path)
     if not current:
         return queue
 
@@ -163,12 +190,10 @@ def build_action_queue(user) -> List[Dict[str, Any]]:
     )
 
     try:
-        from roadmap.generator import get_active_learning_path
         from roadmap.models import NodeStatus
 
-        path = get_active_learning_path(user)
         if path:
-            next_nodes = path.nodes.filter(status=NodeStatus.PENDING).order_by("sequence_index")[:2]
+            next_nodes = _nodes_with_status(path, NodeStatus.PENDING)[:2]
             for idx, node in enumerate(next_nodes, start=2):
                 queue.append(
                     {
