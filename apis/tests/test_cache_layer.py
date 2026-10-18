@@ -1,7 +1,7 @@
 from django.core.cache import cache
 from django.test import SimpleTestCase
 
-from apis.cache_layer import get_or_set, invalidate_user_reads, roadmap_key
+from apis.cache_layer import classroom_home_key, get_or_set, invalidate_user_reads, roadmap_key
 
 
 class FakeUser:
@@ -28,5 +28,7 @@ class CacheLayerTests(SimpleTestCase):
     def test_invalidate_user_reads_clears_roadmap(self):
         user = FakeUser()
         cache.set(roadmap_key(user), {"nodes": []}, 60)
+        cache.set(classroom_home_key(user), {"today": None}, 60)
         invalidate_user_reads(user)
         self.assertIsNone(cache.get(roadmap_key(user)))
+        self.assertIsNone(cache.get(classroom_home_key(user)))

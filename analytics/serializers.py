@@ -264,6 +264,91 @@ class AssessmentQuestionSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
 
+class DetailMessageSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+
+
+class DashboardStatSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    label = serializers.CharField()
+    value = serializers.CharField()
+    subtext = serializers.CharField()
+    list = serializers.ListField(child=serializers.CharField(), required=False)
+    dots = serializers.ListField(child=serializers.BooleanField(), required=False)
+
+
+class DashboardConceptSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    score = serializers.IntegerField()
+    attempts = serializers.IntegerField()
+    accuracy = serializers.IntegerField()
+    tag = serializers.CharField(allow_null=True, required=False)
+    not_started = serializers.BooleanField()
+
+
+class DashboardChapterSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    conceptCount = serializers.IntegerField()
+    overallScore = serializers.IntegerField()
+    concepts = DashboardConceptSerializer(many=True)
+
+
+class DashboardConceptHealthSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    tabs = serializers.ListField(child=serializers.CharField())
+    chapters = DashboardChapterSerializer(many=True)
+
+
+class DashboardSerializer(serializers.Serializer):
+    stats = DashboardStatSerializer(many=True)
+    conceptHealth = DashboardConceptHealthSerializer()
+    source = serializers.CharField(required=False)
+
+
+class ProgressStatSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    label = serializers.CharField()
+    value = serializers.CharField()
+    subtext = serializers.CharField()
+
+
+class MistakeSliceSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    count = serializers.IntegerField()
+    percentage = serializers.IntegerField()
+
+
+class ChapterSeriesSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    data = serializers.ListField(child=serializers.IntegerField())
+    color = serializers.CharField()
+
+
+class ProficiencyOverTimeSerializer(serializers.Serializer):
+    dates = serializers.ListField(child=serializers.CharField())
+    chapters = ChapterSeriesSerializer(many=True)
+
+
+class ConceptBreakdownSerializer(serializers.Serializer):
+    concept = serializers.CharField()
+    chapter = serializers.CharField()
+    score = serializers.IntegerField()
+    attempts = serializers.IntegerField()
+    accuracy = serializers.IntegerField()
+    lastAttempted = serializers.CharField()
+    trend = serializers.CharField()
+
+
+class ProgressSerializer(serializers.Serializer):
+    subtitle = serializers.CharField()
+    stats = ProgressStatSerializer(many=True)
+    mistakesDistribution = MistakeSliceSerializer(many=True)
+    proficiencyOverTime = ProficiencyOverTimeSerializer()
+    conceptBreakdownTable = ConceptBreakdownSerializer(many=True)
+    totalAttempts = serializers.IntegerField()
+    source = serializers.CharField(required=False)
+
+
 # --- Chat history (read models over Supabase `sessions` / `chat_turns`) -------
 # These are plain Serializers, not ModelSerializers: the agent owns these tables
 # in the `public` schema and Django has no ORM model for them. They exist so

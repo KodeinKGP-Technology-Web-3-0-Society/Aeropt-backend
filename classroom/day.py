@@ -73,6 +73,9 @@ def record_today_decision(user, concept_id: str, status: str) -> None:
         for_date=timezone.localdate(),
         defaults={"status": status},
     )
+    from apis.cache_layer import invalidate_user_reads
+
+    invalidate_user_reads(user)
 
 
 def _learner_body(user, provisional, for_date: str, skip: List[str]) -> Dict[str, Any]:

@@ -14,9 +14,9 @@ import re
 import time
 import uuid
 
-from prepwise.logging_utils import reset_request_id, set_request_id
+from jeepath.logging_utils import reset_request_id, set_request_id
 
-logger = logging.getLogger("prepwise.request")
+logger = logging.getLogger("jeepath.request")
 
 REQUEST_ID_HEADER = "X-Request-ID"
 _WSGI_KEY = "HTTP_X_REQUEST_ID"

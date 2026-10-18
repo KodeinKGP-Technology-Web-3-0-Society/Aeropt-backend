@@ -245,3 +245,94 @@ class NotificationSerializer(serializers.ModelSerializer):
             "created_at",
         )
         read_only_fields = ("id", "created_at", "user")
+
+
+class LeaderboardEntrySerializer(serializers.Serializer):
+    rank = serializers.IntegerField()
+    user_id = serializers.UUIDField()
+    name = serializers.CharField()
+    current_streak = serializers.IntegerField()
+    highest_streak = serializers.IntegerField()
+
+
+class MeSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    email = serializers.EmailField()
+    full_name = serializers.CharField(allow_blank=True)
+    supabase_user_id = serializers.UUIDField(allow_null=True)
+    profile = StudentProfileSerializer()
+    placement = SyllabusPlacementSerializer()
+    onboarding_session = OnboardingSessionSerializer()
+    onboarding_completed = serializers.BooleanField()
+    onboarding_step = serializers.IntegerField()
+
+
+class ChapterMetaSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    concept_count = serializers.IntegerField()
+    order = serializers.IntegerField()
+
+
+class SubjectUnitSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    chapters = serializers.ListField(child=serializers.CharField())
+
+
+class SubjectUnitsSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    units = SubjectUnitSerializer(many=True)
+
+
+class OnboardingChaptersSerializer(serializers.Serializer):
+    chapters = ChapterMetaSerializer(many=True)
+    subjects = SubjectUnitsSerializer(many=True)
+
+
+class PlacementPlanRequestSerializer(serializers.Serializer):
+    journey_type = serializers.CharField(required=False)
+    covered_chapters = serializers.ListField(child=serializers.CharField(), required=False)
+    self_assessed_coverage = serializers.JSONField(required=False)
+
+
+class PlacementPlanSerializer(serializers.Serializer):
+    probes = serializers.ListField(child=serializers.JSONField())
+    total_probes = serializers.IntegerField()
+    estimated_minutes = serializers.IntegerField()
+    skipped_chapters = serializers.ListField(child=serializers.CharField())
+    journey_type = serializers.CharField()
+
+
+class OnboardingCompleteProfileSerializer(serializers.Serializer):
+    target_exam = serializers.CharField(required=False)
+    target_year = serializers.IntegerField(required=False, allow_null=True)
+    grade_level = serializers.CharField(required=False)
+    daily_goal_minutes = serializers.IntegerField(required=False)
+    preferred_depth = serializers.CharField(required=False)
+    onboarding_step = serializers.IntegerField(required=False)
+
+
+class OnboardingCompletePlacementSerializer(serializers.Serializer):
+    journey_type = serializers.CharField(required=False)
+    learning_source = serializers.CharField(required=False, allow_blank=True)
+    covered_chapters = serializers.ListField(child=serializers.CharField(), required=False)
+    self_assessed_coverage = serializers.JSONField(required=False)
+    diagnostic_baseline = serializers.JSONField(required=False)
+
+
+class OnboardingCompleteRequestSerializer(serializers.Serializer):
+    profile = OnboardingCompleteProfileSerializer(required=False)
+    placement = OnboardingCompletePlacementSerializer(required=False)
+    snapshot = serializers.JSONField(required=False)
+    current_step = serializers.IntegerField(required=False)
+    onboarding_step = serializers.IntegerField(required=False)
+
+
+class OnboardingCompleteResponseSerializer(serializers.Serializer):
+    ok = serializers.BooleanField()
+    onboarding_completed = serializers.BooleanField()
+    sandbox = serializers.JSONField()
+    roadmap = serializers.JSONField(allow_null=True)
+
+
+class LogoutRequestSerializer(serializers.Serializer):
+    refresh = serializers.CharField()

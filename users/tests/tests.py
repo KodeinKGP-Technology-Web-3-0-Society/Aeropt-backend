@@ -159,13 +159,15 @@ class TokenClaimTests(APITestCase):
     def test_login_and_refreshed_access_tokens_carry_the_supabase_id(self):
         from unittest import mock
 
-        with mock.patch("users.views.ensure_supabase_user", return_value=str(self.user.supabase_user_id)):
+        with mock.patch("users.views.ensure_supabase_user", return_value=str(self.user.supabase_user_id)) as ensure:
             res = self.client.post(
                 "/api/v1/auth/token/",
                 {"email": "claim@example.com", "password": "testpass123"},
                 format="json",
             )
+        self.assertEqual(ensure.call_count, 1)
         self.assertEqual(res.status_code, status.HTTP_200_OK, res.content)
+        self.assertEqual(res.data["supabase_user_id"], str(self.user.supabase_user_id))
         self.assertEqual(self._claims(res.data["access"])["supabase_user_id"], str(self.user.supabase_user_id))
 
         refreshed = self.client.post("/api/v1/auth/token/refresh/", {"refresh": res.data["refresh"]}, format="json")

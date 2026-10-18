@@ -1,4 +1,5 @@
 from django.utils import timezone
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -16,6 +17,9 @@ from roadmap.serializers import (
     LearningPathSerializer,
     PathNodeSerializer,
     PathProgressUpdateSerializer,
+    RoadmapNextSerializer,
+    RoadmapProgressResponseSerializer,
+    RoadmapSubjectsSerializer,
 )
 from roadmap.syllabus import available_subjects
 from apis.cache_layer import (
@@ -56,6 +60,13 @@ def _resolve_subject(request) -> str:
 class RoadmapView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("subject", str, description="Physics or Chemistry. Anything else falls back to Physics."),
+            OpenApiParameter("regenerate", str, description="Pass 1 to rebuild the active path."),
+        ],
+        responses={200: LearningPathSerializer},
+    )
     def get(self, request):
         subject = _resolve_subject(request)
         regenerate = request.query_params.get("regenerate") == "1"
@@ -89,6 +100,13 @@ class RoadmapView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("subject", str, description="Physics or Chemistry. Anything else falls back to Physics."),
+        ],
+        request=None,
+        responses={201: LearningPathSerializer},
+    )
     def post(self, request):
         subject = _resolve_subject(request)
         try:
@@ -110,6 +128,7 @@ class RoadmapSubjectsView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: RoadmapSubjectsSerializer})
     def get(self, request):
         return Response({"subjects": available_subjects()})
 
@@ -117,6 +136,12 @@ class RoadmapSubjectsView(APIView):
 class RoadmapNextView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("subject", str, description="Physics or Chemistry. Anything else falls back to Physics."),
+        ],
+        responses={200: RoadmapNextSerializer},
+    )
     def get(self, request):
         subject = _resolve_subject(request)
         try:
@@ -134,6 +159,10 @@ class RoadmapNextView(APIView):
 class RoadmapProgressView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=PathProgressUpdateSerializer,
+        responses={200: RoadmapProgressResponseSerializer},
+    )
     def patch(self, request):
         serializer = PathProgressUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

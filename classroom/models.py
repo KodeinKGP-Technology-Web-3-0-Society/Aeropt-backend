@@ -50,6 +50,9 @@ class ConceptTracker(models.Model):
                 name="classroom_tracker_user_concept",
             ),
         ]
+        indexes = [
+            models.Index(fields=["concept_id"], name="classroom_tracker_concept"),
+        ]
 
     def __str__(self):
         return f"{self.user_id}:{self.concept_id}:{self.mastery}"
@@ -75,6 +78,7 @@ class EvidenceEvent(models.Model):
         ordering = ("created_at", "id")
         indexes = [
             models.Index(fields=["user", "created_at"], name="classroom_evidence_user_time"),
+            models.Index(fields=["user", "kind"], name="classroom_evidence_user_kind"),
         ]
 
     def __str__(self):
@@ -104,6 +108,9 @@ class TodayDecision(models.Model):
                 fields=["user", "concept_id", "for_date"],
                 name="classroom_today_decision_once",
             ),
+        ]
+        indexes = [
+            models.Index(fields=["user", "for_date"], name="classroom_today_user_date"),
         ]
 
     def __str__(self):

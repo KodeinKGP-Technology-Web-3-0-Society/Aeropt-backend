@@ -79,6 +79,9 @@ def apply_evidence(user, body: Dict[str, Any]) -> EvidenceEvent:
         )
         if kind in ("attempt", "mastery") and concept_id:
             _apply_tracker(user, concept_id, kind, payload, mastery)
+    from apis.cache_layer import invalidate_user_reads
+
+    invalidate_user_reads(user)
     return event
 
 

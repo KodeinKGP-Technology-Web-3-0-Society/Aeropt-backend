@@ -126,10 +126,18 @@ def _chapter_series(
         if int(s.get("attempts") or 0) > 0 and s.get("concept_id")
     }
 
+    states_by_id: Dict[str, Dict[str, Any]] = {}
+    for state in states:
+        concept_id = state.get("concept_id")
+        if concept_id and concept_id not in states_by_id:
+            states_by_id[concept_id] = state
+
     scores: Dict[str, float] = {}
-    for concept_id in concept_chapters:
-        match = next((s for s in states if s.get("concept_id") == concept_id), None)
-        chapter = concept_chapters.get(concept_id, "")
+    concepts_by_chapter: Dict[str, List[str]] = defaultdict(list)
+    for concept_id, chapter in concept_chapters.items():
+        if chapter:
+            concepts_by_chapter[chapter].append(concept_id)
+        match = states_by_id.get(concept_id)
         if match and not _is_unexplored(match, chapter, placement):
             scores[concept_id] = float(match.get("proficiency_score", 0.5))
         elif concept_id in baseline:
@@ -162,18 +170,15 @@ def _chapter_series(
             if day >= attempt_day:
                 snapshots[day][concept_id] = scores[concept_id]
 
+    known_chapters = set(CHAPTER_ORDER)
     chapter_names = list(CHAPTER_ORDER)
     chapter_names.extend(
-        sorted({
-            chapter
-            for chapter in concept_chapters.values()
-            if chapter and chapter not in CHAPTER_ORDER
-        })
+        sorted(chapter for chapter in concepts_by_chapter if chapter not in known_chapters)
     )
 
     chapters_payload = []
     for chapter_name in chapter_names:
-        concept_ids = [cid for cid, ch in concept_chapters.items() if ch == chapter_name]
+        concept_ids = concepts_by_chapter.get(chapter_name, [])
         active_ids = [cid for cid in concept_ids if cid in attempted_ids]
         if not active_ids:
             continue

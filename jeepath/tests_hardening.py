@@ -1,7 +1,7 @@
 """Tests for the production-hardening layer: request ids, logging correlation,
 throttling, health-check depth and the TLS-gated security settings.
 
-Throttle rates are disabled in ``prepwise.ci_settings`` (the suite would trip
+Throttle rates are disabled in ``jeepath.ci_settings`` (the suite would trip
 them), so the throttling test patches ``SimpleRateThrottle.THROTTLE_RATES``
 directly — DRF caches that dict on the class at import time, so
 ``override_settings`` alone would not take effect.
@@ -18,7 +18,7 @@ from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from rest_framework.throttling import SimpleRateThrottle
 
-from prepwise.logging_utils import (
+from jeepath.logging_utils import (
     NO_REQUEST_ID,
     JSONFormatter,
     RequestIDFilter,
@@ -26,8 +26,8 @@ from prepwise.logging_utils import (
     reset_request_id,
     set_request_id,
 )
-from prepwise.middleware import REQUEST_ID_HEADER
-from prepwise.throttling import AuthBurstRateThrottle
+from jeepath.middleware import REQUEST_ID_HEADER
+from jeepath.throttling import AuthBurstRateThrottle
 
 
 class RequestIDMiddlewareTests(TestCase):
@@ -69,7 +69,7 @@ class LoggingCorrelationTests(TestCase):
 
         handler = Capture(level=logging.INFO)
         handler.addFilter(RequestIDFilter())
-        access_logger = logging.getLogger("prepwise.request")
+        access_logger = logging.getLogger("jeepath.request")
         previous_level = access_logger.level
         access_logger.addHandler(handler)
         access_logger.setLevel(logging.INFO)
@@ -160,7 +160,7 @@ class ThrottleTests(TestCase):
 
     def test_default_throttle_classes_are_configured(self):
         classes = settings.REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"]
-        self.assertIn("prepwise.throttling.AuthBurstRateThrottle", classes)
+        self.assertIn("jeepath.throttling.AuthBurstRateThrottle", classes)
         self.assertIn("rest_framework.throttling.AnonRateThrottle", classes)
         self.assertIn("rest_framework.throttling.UserRateThrottle", classes)
 
@@ -212,4 +212,4 @@ class SecuritySettingsTests(SimpleTestCase):
         self.assertTrue(settings.CORS_ALLOWED_ORIGINS)
 
     def test_request_id_middleware_runs_first(self):
-        self.assertEqual(settings.MIDDLEWARE[0], "prepwise.middleware.RequestIDMiddleware")
+        self.assertEqual(settings.MIDDLEWARE[0], "jeepath.middleware.RequestIDMiddleware")

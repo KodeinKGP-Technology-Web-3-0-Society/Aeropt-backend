@@ -1,12 +1,12 @@
 import logging
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.exceptions import NotAuthenticated
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+
+from apis.viewsets import ActorMixin
 
 from analytics.cache_keys import (
     TTL_CHAT_HISTORY,
@@ -17,6 +17,9 @@ from analytics.cache_keys import (
 from analytics.serializers import (
     ChatHistoryDetailSerializer,
     ChatHistoryListSerializer,
+    DashboardSerializer,
+    DetailMessageSerializer,
+    ProgressSerializer,
 )
 from analytics.supabase_chat_history import (
     DEFAULT_PAGE_SIZE,
@@ -38,28 +41,13 @@ from users.supabase_sync import ensure_supabase_user, is_supabase_configured
 
 logger = logging.getLogger(__name__)
 
-class _SessionMixin:
-    def _get_actor_user(self, request):
-        if request.user and request.user.is_authenticated:
-            return request.user
 
-        if not getattr(settings, "DEV_AUTH_BYPASS", False):
-            raise NotAuthenticated("Authentication credentials were not provided.")
-
-        User = get_user_model()
-        email = getattr(settings, "DEV_AUTH_BYPASS_EMAIL", "chatbot-dev@local.test")
-        dev_user, _ = User.objects.get_or_create(
-            email=email,
-            defaults={"full_name": "Chatbot Dev", "is_active": True},
-        )
-        return dev_user
-
-
-class DashboardView(APIView, _SessionMixin):
+class DashboardView(ActorMixin, APIView):
     permission_classes = (AllowAny if getattr(settings, "DEV_AUTH_BYPASS", False) else IsAuthenticated,)
 
+    @extend_schema(responses={200: DashboardSerializer, 503: DetailMessageSerializer})
     def get(self, request):
-        user = self._get_actor_user(request)
+        user = self.get_actor_user()
         supabase_user_id = ensure_supabase_user(user)
 
         if not is_supabase_configured():
@@ -92,11 +80,12 @@ class DashboardView(APIView, _SessionMixin):
         )
 
 
-class ProgressView(APIView, _SessionMixin):
+class ProgressView(ActorMixin, APIView):
     permission_classes = (AllowAny if getattr(settings, "DEV_AUTH_BYPASS", False) else IsAuthenticated,)
 
+    @extend_schema(responses={200: ProgressSerializer, 503: DetailMessageSerializer})
     def get(self, request):
-        user = self._get_actor_user(request)
+        user = self.get_actor_user()
         supabase_user_id = ensure_supabase_user(user)
 
         if not is_supabase_configured():
@@ -129,7 +118,7 @@ class ProgressView(APIView, _SessionMixin):
         )
 
 
-class _SupabaseReadView(APIView, _SessionMixin):
+class _SupabaseReadView(ActorMixin, APIView):
     """Shared preamble for the Supabase-backed read endpoints.
 
     Returns (user, supabase_user_id, error_response). CI and any unconfigured
@@ -140,7 +129,7 @@ class _SupabaseReadView(APIView, _SessionMixin):
     permission_classes = (AllowAny if getattr(settings, "DEV_AUTH_BYPASS", False) else IsAuthenticated,)
 
     def _resolve(self, request):
-        user = self._get_actor_user(request)
+        user = self.get_actor_user()
         supabase_user_id = ensure_supabase_user(user)
         if not is_supabase_configured():
             return user, None, Response(
