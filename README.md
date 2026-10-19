@@ -159,3 +159,4 @@ Existing keys (`SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `DATABASE_URL` /
 | `CI_HARDENING_LIVE` | unset | `jeepath.ci_settings` only: keep the real logging levels and throttle rates instead of the CI-relaxed ones, so the hardening can be exercised against throwaway sqlite (`CI_HARDENING_LIVE=1 DJANGO_SETTINGS_MODULE=jeepath.ci_settings python manage.py runserver 8011`). |
 | `PORT` / `GUNICORN_BIND` | `8000` / `0.0.0.0:$PORT` | Bind address. |
 | `WEB_CONCURRENCY` | `2 * cpu + 1` | Gunicorn workers. Also `GUNICORN_THREADS`, `GUNICORN_TIMEOUT`, `GUNICORN_MAX_REQUESTS`, `GUNICORN_LOG_LEVEL`, `GUNICORN_ACCESS_LOG`, `GUNICORN_PRELOAD`. |
+| `DB_CONN_MAX_AGE` | `60` | Seconds a Postgres connection is reused (0 = one per request). Each gunicorn thread keeps its own, so peak connections are about `WEB_CONCURRENCY × GUNICORN_THREADS`: keep that under the pooler limit. |

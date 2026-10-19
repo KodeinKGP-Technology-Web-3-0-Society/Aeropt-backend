@@ -200,6 +200,13 @@ def _build_database_config():
 
 
 DATABASES = {"default": _build_database_config()}
+if DATABASES["default"]["ENGINE"].endswith("postgresql"):
+    # Reuse connections instead of opening a TLS session to the pooler on every
+    # request. Health checks drop a connection the pooler closed while idle.
+    DATABASES["default"]["CONN_MAX_AGE"] = int(os.getenv("DB_CONN_MAX_AGE", "60"))
+    DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+    # Supabase's transaction pooler (port 6543) cannot hold server-side cursors.
+    DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = DATABASES["default"]["PORT"] == "6543"
 DB_SCHEMA = os.getenv("DB_SCHEMA", "django").strip() or "django"
 
 # In-process cache for hot API reads (dashboard / roadmap / queue). No Redis.
