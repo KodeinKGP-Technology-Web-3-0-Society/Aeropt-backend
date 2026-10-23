@@ -58,6 +58,9 @@ class RequestIDMiddleware:
             raise
         else:
             response[REQUEST_ID_HEADER] = request_id
+            # Authenticated API payloads must never be kept by a shared cache or proxy.
+            if request.path.startswith("/api/") and "Cache-Control" not in response:
+                response["Cache-Control"] = "no-store"
             status_code = response.status_code
             # Django's own django.request lines for 4xx/5xx are emitted after this
             # middleware returns, so they cannot carry the id. This line can, and

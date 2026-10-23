@@ -10,7 +10,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from apis.viewsets import BaseModelViewSet, UserPrimaryKeyViewSet, UserScopedViewSet
+from apis.viewsets import BaseModelViewSet, StaffWriteViewSet, SystemOwnedMixin, UserPrimaryKeyViewSet, UserScopedViewSet
 from users.serializers import (
     AchievementSerializer,
     AuthSessionSerializer,
@@ -144,7 +144,7 @@ class UserViewSet(BaseModelViewSet):
         return context
 
 
-class OAuthAccountViewSet(UserScopedViewSet):
+class OAuthAccountViewSet(SystemOwnedMixin, UserScopedViewSet):
     queryset = OAuthAccount.objects.select_related("user").all()
     serializer_class = OAuthAccountSerializer
     filterset_fields = ("provider", "user")
@@ -152,7 +152,7 @@ class OAuthAccountViewSet(UserScopedViewSet):
     ordering_fields = ("created_at",)
 
 
-class AuthSessionViewSet(UserScopedViewSet):
+class AuthSessionViewSet(SystemOwnedMixin, UserScopedViewSet):
     queryset = AuthSession.objects.select_related("user").all()
     serializer_class = AuthSessionSerializer
     filterset_fields = ("user", "revoked_at")
@@ -191,7 +191,7 @@ class UserPreferencesViewSet(UserPrimaryKeyViewSet):
     lookup_field = "user_id"
 
 
-class PlanViewSet(BaseModelViewSet):
+class PlanViewSet(StaffWriteViewSet):
     queryset = Plan.objects.all()
     serializer_class = PlanSerializer
     filterset_fields = ("is_active", "code")
@@ -204,14 +204,14 @@ class PlanViewSet(BaseModelViewSet):
         return [IsAuthenticated()]
 
 
-class SubscriptionViewSet(UserScopedViewSet):
+class SubscriptionViewSet(SystemOwnedMixin, UserScopedViewSet):
     queryset = Subscription.objects.select_related("user", "plan").all()
     serializer_class = SubscriptionSerializer
     filterset_fields = ("status", "provider", "plan", "user")
     ordering_fields = ("started_at", "current_period_end")
 
 
-class AchievementViewSet(BaseModelViewSet):
+class AchievementViewSet(StaffWriteViewSet):
     queryset = Achievement.objects.all()
     serializer_class = AchievementSerializer
     filterset_fields = ("code",)
@@ -224,7 +224,7 @@ class AchievementViewSet(BaseModelViewSet):
         return [IsAuthenticated()]
 
 
-class UserAchievementViewSet(UserScopedViewSet):
+class UserAchievementViewSet(SystemOwnedMixin, UserScopedViewSet):
     queryset = UserAchievement.objects.select_related("user", "achievement").all()
     serializer_class = UserAchievementSerializer
     filterset_fields = ("achievement", "user")

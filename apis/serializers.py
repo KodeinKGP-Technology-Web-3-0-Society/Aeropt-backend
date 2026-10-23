@@ -117,7 +117,17 @@ class ContentFlagSerializer(serializers.ModelSerializer):
             "created_at",
             "resolved_at",
         )
-        read_only_fields = ("id", "created_at")
+        read_only_fields = ("id", "created_at", "reported_by")
+
+    _STAFF_ONLY = ("status", "resolved_by", "resolved_at")
+
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get("request")
+        if not (request and request.user and request.user.is_staff):
+            for name in self._STAFF_ONLY:
+                fields[name].read_only = True
+        return fields
 
 
 class HealthCheckSerializer(serializers.Serializer):

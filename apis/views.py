@@ -27,7 +27,7 @@ from apis.serializers import (
     HealthCheckSerializer,
     SubjectSerializer,
 )
-from apis.viewsets import BaseModelViewSet, UserScopedViewSet
+from apis.viewsets import BaseModelViewSet, StaffWriteViewSet, UserScopedViewSet
 
 
 logger = logging.getLogger(__name__)
@@ -93,7 +93,7 @@ class HealthCheckView(APIView):
         return True, None
 
 
-class SubjectViewSet(BaseModelViewSet):
+class SubjectViewSet(StaffWriteViewSet):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
     filterset_fields = ("slug",)
@@ -101,7 +101,7 @@ class SubjectViewSet(BaseModelViewSet):
     ordering_fields = ("order_index", "name", "id")
 
 
-class ChapterViewSet(BaseModelViewSet):
+class ChapterViewSet(StaffWriteViewSet):
     queryset = Chapter.objects.select_related("subject").all()
     serializer_class = ChapterSerializer
     filterset_fields = ("subject", "slug")
@@ -109,7 +109,7 @@ class ChapterViewSet(BaseModelViewSet):
     ordering_fields = ("order_index", "name", "id")
 
 
-class ConceptViewSet(BaseModelViewSet):
+class ConceptViewSet(StaffWriteViewSet):
     queryset = Concept.objects.select_related("chapter", "chapter__subject").all()
     serializer_class = ConceptSerializer
     filterset_fields = ("chapter", "slug")
@@ -117,14 +117,14 @@ class ConceptViewSet(BaseModelViewSet):
     ordering_fields = ("order_index", "name", "id")
 
 
-class ConceptPrerequisiteViewSet(BaseModelViewSet):
+class ConceptPrerequisiteViewSet(StaffWriteViewSet):
     queryset = ConceptPrerequisite.objects.select_related("concept", "prerequisite_concept").all()
     serializer_class = ConceptPrerequisiteSerializer
     filterset_fields = ("concept", "prerequisite_concept")
     ordering_fields = ("concept", "prerequisite_concept")
 
 
-class ContentItemViewSet(BaseModelViewSet):
+class ContentItemViewSet(StaffWriteViewSet):
     queryset = ContentItem.objects.select_related(
         "subject", "chapter", "primary_concept"
     ).all()
@@ -146,7 +146,7 @@ class ContentItemViewSet(BaseModelViewSet):
     ordering_fields = ("created_at", "difficulty", "jee_year")
 
 
-class ContentSecondaryConceptViewSet(BaseModelViewSet):
+class ContentSecondaryConceptViewSet(StaffWriteViewSet):
     queryset = ContentSecondaryConcept.objects.select_related("content_item", "concept").all()
     serializer_class = ContentSecondaryConceptSerializer
     filterset_fields = ("content_item", "concept")

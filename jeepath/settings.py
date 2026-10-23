@@ -319,6 +319,22 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
+# Refuse to boot a production deployment (TLS-terminated, DEBUG off) with dev-grade secrets or
+# wildcard exposure. Local and CI runs are untouched.
+if BEHIND_TLS and not DEBUG:
+    _prod_problems = []
+    if len(SECRET_KEY) < 50 or SECRET_KEY.lower().startswith(("django-insecure", "change", "dev", "test")):
+        _prod_problems.append("SECRET_KEY must be a random value of at least 50 characters")
+    if "*" in ALLOWED_HOSTS:
+        _prod_problems.append("ALLOWED_HOSTS must list explicit hosts, not '*'")
+    if any(not o.startswith("https://") for o in CORS_ALLOWED_ORIGINS):
+        _prod_problems.append("CORS_ALLOWED_ORIGINS must all be https:// origins")
+    if _prod_problems:
+        raise ImproperlyConfigured("Insecure production configuration: " + "; ".join(_prod_problems))
+
+# Admin lives at a configurable path so it is not at the default, scanned-for URL.
+ADMIN_URL = os.getenv("ADMIN_URL", "admin/").strip("/") + "/"
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",

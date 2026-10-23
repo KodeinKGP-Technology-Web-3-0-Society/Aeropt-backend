@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import NotAuthenticated
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
 from apis.permissions import IsOwnerOrAdmin
@@ -35,6 +35,39 @@ class BaseModelViewSet(ModelViewSet):
     permission_classes = get_permission_classes()
 
 
+_WRITE_ACTIONS = ("create", "update", "partial_update", "destroy")
+
+
+class StaffWriteViewSet(BaseModelViewSet):
+    """Reference data (catalog, plans, achievements): any signed-in user may read it, only staff
+    may change it. These used to accept writes from every student."""
+
+    def get_permissions(self):
+        if getattr(settings, "DEV_AUTH_BYPASS", False):
+            return [AllowAny()]
+        if self.action in _WRITE_ACTIONS:
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
+
+
+class SystemOwnedMixin:
+    """Rows that belong to a user but are written by the system (mastery, streaks, attempts,
+    subscriptions, achievements...). The owner may read them; changing them is staff-only, so a
+    student cannot award themselves an achievement, upgrade a plan or edit their own score.
+    Set `owner_may_delete = True` where deleting your own row is a feature (a signed-in device)."""
+
+    owner_may_delete = False
+
+    def get_permissions(self):
+        if getattr(settings, "DEV_AUTH_BYPASS", False):
+            return [AllowAny()]
+        if self.action == "destroy" and self.owner_may_delete:
+            return [IsAuthenticated(), IsOwnerOrAdmin()]
+        if self.action in _WRITE_ACTIONS:
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
+
+
 class UserScopedViewSet(ActorMixin, BaseModelViewSet):
     owner_field = "user"
 
@@ -53,10 +86,13 @@ class UserScopedViewSet(ActorMixin, BaseModelViewSet):
         return queryset.filter(**{self.owner_field: user})
 
     def perform_create(self, serializer):
-        if self.owner_field in serializer.validated_data:
+        actor = self.get_actor_user()
+        # Only staff may create a row in someone else's name; for everyone else the owner is the caller,
+        # whatever the request body says.
+        if actor.is_staff and self.owner_field in serializer.validated_data:
             serializer.save()
         else:
-            serializer.save(**{self.owner_field: self.get_actor_user()})
+            serializer.save(**{self.owner_field: actor})
 
 
 class UserPrimaryKeyViewSet(UserScopedViewSet):

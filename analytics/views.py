@@ -219,7 +219,7 @@ class ChatHistoryDetailView(_SupabaseReadView):
         return Response(payload)
 
 
-from apis.viewsets import BaseModelViewSet, UserPrimaryKeyViewSet, UserScopedViewSet
+from apis.viewsets import BaseModelViewSet, StaffWriteViewSet, SystemOwnedMixin, UserPrimaryKeyViewSet, UserScopedViewSet
 from analytics.models import (
     Assessment,
     AssessmentQuestion,
@@ -256,35 +256,35 @@ from analytics.serializers import (
 
 
 
-class ConceptMasteryViewSet(UserScopedViewSet):
+class ConceptMasteryViewSet(SystemOwnedMixin, UserScopedViewSet):
     queryset = ConceptMastery.objects.select_related("user", "concept").all()
     serializer_class = ConceptMasterySerializer
     filterset_fields = ("status", "is_flagged_weak", "user", "concept")
     ordering_fields = ("mastery_score", "updated_at", "last_practiced_at")
 
 
-class ChapterProgressViewSet(UserScopedViewSet):
+class ChapterProgressViewSet(SystemOwnedMixin, UserScopedViewSet):
     queryset = ChapterProgress.objects.select_related("user", "chapter").all()
     serializer_class = ChapterProgressSerializer
     filterset_fields = ("chapter", "user")
     ordering_fields = ("mastery_score", "completion_percent", "updated_at")
 
 
-class ProficiencySnapshotViewSet(UserScopedViewSet):
+class ProficiencySnapshotViewSet(SystemOwnedMixin, UserScopedViewSet):
     queryset = ProficiencySnapshot.objects.select_related("user", "subject").all()
     serializer_class = ProficiencySnapshotSerializer
     filterset_fields = ("subject", "snapshot_date", "user")
     ordering_fields = ("snapshot_date", "proficiency")
 
 
-class LearningGapViewSet(UserScopedViewSet):
+class LearningGapViewSet(SystemOwnedMixin, UserScopedViewSet):
     queryset = LearningGap.objects.select_related("user", "concept").all()
     serializer_class = LearningGapSerializer
     filterset_fields = ("severity", "source", "user", "concept")
     ordering_fields = ("detected_at", "resolved_at", "severity")
 
 
-class RecommendationViewSet(UserScopedViewSet):
+class RecommendationViewSet(SystemOwnedMixin, UserScopedViewSet):
     queryset = Recommendation.objects.select_related("user", "concept", "content_item").all()
     serializer_class = RecommendationSerializer
     filterset_fields = ("type", "user", "concept", "content_item")
@@ -292,7 +292,7 @@ class RecommendationViewSet(UserScopedViewSet):
     ordering_fields = ("score", "created_at", "served_at")
 
 
-class QuestionAttemptViewSet(UserScopedViewSet):
+class QuestionAttemptViewSet(SystemOwnedMixin, UserScopedViewSet):
     # `study_session` used to appear here and in the serializer, but no such
     # field (or model) exists on QuestionAttempt — it made every request to this
     # viewset, and all of /api/schema/, raise TypeError from django-filter.
@@ -302,27 +302,27 @@ class QuestionAttemptViewSet(UserScopedViewSet):
     ordering_fields = ("attempted_at", "attempt_number")
 
 
-class StreakViewSet(UserPrimaryKeyViewSet):
+class StreakViewSet(SystemOwnedMixin, UserPrimaryKeyViewSet):
     queryset = Streak.objects.select_related("user").all()
     serializer_class = StreakSerializer
     lookup_field = "user_id"
 
 
-class DailyActivityViewSet(UserScopedViewSet):
+class DailyActivityViewSet(SystemOwnedMixin, UserScopedViewSet):
     queryset = DailyActivity.objects.select_related("user").all()
     serializer_class = DailyActivitySerializer
     filterset_fields = ("activity_date", "goal_met", "user")
     ordering_fields = ("activity_date", "minutes_studied")
 
 
-class AssessmentViewSet(UserScopedViewSet):
+class AssessmentViewSet(SystemOwnedMixin, UserScopedViewSet):
     queryset = Assessment.objects.select_related("user", "chapter", "concept").all()
     serializer_class = AssessmentSerializer
     filterset_fields = ("type", "status", "user", "chapter", "concept")
     ordering_fields = ("started_at", "completed_at", "score")
 
 
-class AssessmentQuestionViewSet(BaseModelViewSet):
+class AssessmentQuestionViewSet(StaffWriteViewSet):
     queryset = AssessmentQuestion.objects.select_related("assessment", "content_item").all()
     serializer_class = AssessmentQuestionSerializer
     filterset_fields = ("assessment", "content_item", "is_correct", "is_flagged")
