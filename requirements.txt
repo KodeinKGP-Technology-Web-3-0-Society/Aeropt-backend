@@ -30,6 +30,9 @@ supabase==2.10.0
 # Database — PostgreSQL via Supabase (django schema for Django ORM tables)
 psycopg2-binary==2.9.10
 
+# HTTP client for the agent gateway (pooled, streams SSE). Already pulled in by supabase.
+httpx==0.27.2
+
 # Utilities
 Pillow==10.4.0        # avatar image uploads (ImageField)
 PyYAML==6.0.2         # canonical syllabus spec (roadmap app)

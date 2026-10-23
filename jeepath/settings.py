@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'roadmap',     # personal learning path generator (Phase 2)
     'sandbox',     # proactive action queue + readiness (Phase 3)
     'classroom',   # home, tracker, and the evidence bus — the learner-facing score
+    'agent_gateway',  # /api/v1/agent/*: the browser's only route to the tutor agent
 ]
 
 # Custom user model — must be set before first migration
@@ -331,6 +332,13 @@ if BEHIND_TLS and not DEBUG:
         _prod_problems.append("CORS_ALLOWED_ORIGINS must all be https:// origins")
     if _prod_problems:
         raise ImproperlyConfigured("Insecure production configuration: " + "; ".join(_prod_problems))
+
+# The tutor agent, reached only from here (agent_gateway + classroom specialists). In production
+# it should listen on a private address; the browser never talks to it directly.
+AGENT_API_BASE_URL = os.getenv("AGENT_API_BASE_URL", "").strip()
+AGENT_CONNECT_TIMEOUT = float(os.getenv("AGENT_CONNECT_TIMEOUT", "5"))
+# Longest silence tolerated mid-reply. SSE streams send a keepalive every 15 s.
+AGENT_READ_TIMEOUT = float(os.getenv("AGENT_READ_TIMEOUT", "180"))
 
 # Admin lives at a configurable path so it is not at the default, scanned-for URL.
 ADMIN_URL = os.getenv("ADMIN_URL", "admin/").strip("/") + "/"

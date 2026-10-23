@@ -31,4 +31,5 @@ urlpatterns = [
     path("roadmap/", include("roadmap.urls")),
     path("sandbox/", include("sandbox.urls")),
     path("classroom/", include("classroom.urls")),
+    path("agent/", include("agent_gateway.urls")),
 ] + router.urls

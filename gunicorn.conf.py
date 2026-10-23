@@ -17,10 +17,13 @@ _WORKER_CAP = int(os.getenv("GUNICORN_WORKER_CAP", "9"))
 workers = int(
     os.getenv("WEB_CONCURRENCY", str(min(multiprocessing.cpu_count() * 2 + 1, _WORKER_CAP)))
 )
-threads = int(os.getenv("GUNICORN_THREADS", "2"))
-worker_class = os.getenv("GUNICORN_WORKER_CLASS", "sync")
+# Threaded workers: the agent gateway holds a thread for the length of a tutor reply (an SSE
+# stream can run a minute or more), and a sync worker would block on it and then be killed
+# by `timeout`. Under gthread, `timeout` is the worker's heartbeat, not a per-request cap.
+threads = int(os.getenv("GUNICORN_THREADS", "8"))
+worker_class = os.getenv("GUNICORN_WORKER_CLASS", "gthread")
 
-# Requests are short API calls; anything past 30s is a stuck worker.
+# Plain API calls are short; past 30s without a heartbeat the worker is stuck.
 timeout = int(os.getenv("GUNICORN_TIMEOUT", "30"))
 graceful_timeout = int(os.getenv("GUNICORN_GRACEFUL_TIMEOUT", "30"))
 keepalive = int(os.getenv("GUNICORN_KEEPALIVE", "5"))

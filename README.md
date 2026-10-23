@@ -15,6 +15,7 @@ Port **8000**. Collaborators: KodeinKGP, IIT Kharagpur.
 | `analytics` | Dashboard and progress; reads agent tables in `public` |
 | `sandbox` | Today's action queue, packed to `daily_goal_minutes` |
 | `apis` | Health, catalog ViewSets, in-process cache |
+| `agent_gateway` | `/api/v1/agent/*`: the browser's only route to the tutor agent |
 
 One Postgres (Supabase): `django` schema = this ORM; `public` schema = agent.
 Search path: `django,public`.
@@ -46,6 +47,7 @@ All student routes sit under `/api/v1/`. Schema UI: `/api/docs/`.
 | GET | `/api/v1/analytics/dashboard/`, `/analytics/progress/` |
 | GET | `/api/v1/analytics/chat-history/` (`page`, `page_size`, `subject`), `/analytics/chat-history/<session_id>/` |
 | GET | `/api/v1/subjects/`, `/chapters/`, `/concepts/`, `/content-items/` |
+| any | `/api/v1/agent/<path>` → agent `/api/v1/<path>` (allowlisted routes only) |
 
 There is no Django chatbot. That app is gone.
 
@@ -99,6 +101,16 @@ Hosts with no release step (Hugging Face Spaces) set `MIGRATE_ON_START=1` instea
 `AGENT_API_BASE_URL` + `AGENT_SERVICE_TOKEN` let the classroom call the agent's day
 specialists; the token must equal the agent's `AGENT_SERVICE_TOKEN`. Login tokens carry
 a `supabase_user_id` claim, which the agent uses as the caller's identity.
+
+**Agent gateway.** The frontend and the Android app call the tutor only through
+`/api/v1/agent/<path>` (`agent_gateway/views.py`). Django authenticates the JWT, refuses
+any route not on the allowlist (classroom specialists, coach and admin stay server-only),
+rejects and overwrites any `user_id` that is not the caller's, forwards the bearer token,
+and relays SSE streams unbuffered over one pooled keep-alive connection per worker. Agent
+down → `502`, slow → `504`, unset `AGENT_API_BASE_URL` → `503`. Tunables:
+`AGENT_CONNECT_TIMEOUT` (5 s), `AGENT_READ_TIMEOUT` (180 s, longest silence mid-reply).
+Run the agent on a private address only Django can reach. Gunicorn defaults to `gthread`
+workers (8 threads) so a long stream holds a thread, not a whole worker.
 
 Before deploying, confirm the checklist is clean:
 
